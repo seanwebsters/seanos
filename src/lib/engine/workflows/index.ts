@@ -6,5 +6,6 @@ import "./studio";
 import "./opportunities";
 import "./life";
 import "./general";
+import "./finance";
 
 export { IDEA_ACTIONS } from "./general";

@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { addDays, dayPart, londonDate, londonTimeToUtc } from "@/lib/time";
 import { getWeather } from "@/lib/integrations/weather";
 import { budgetStatus } from "@/lib/ai/llm";
+import { summarise } from "@/lib/finance";
 
 export async function homeData() {
   const db = getDb();
@@ -51,10 +52,13 @@ export async function homeData() {
     ...(await db.list("people")).filter((p) => p.remind_at && p.remind_at.slice(0, 10) <= today).map((p) => `Follow up with ${p.name}`),
   ];
   const saved = (await db.list("stories", { where: { saved: true }, orderBy: { column: "created_at", ascending: false }, limit: 4 }));
+  const [txns, budgets, recurring, accounts, goals] = await Promise.all([db.list("transactions"), db.list("budgets"), db.list("recurring"), db.list("accounts"), db.list("finance_goals")]);
+  const money = txns.length || recurring.length || accounts.length ? summarise({ today, txns, budgets, recurring, accounts, goals }) : null;
   const weather = await getWeather(profile.home_lat, profile.home_lng);
   const budget = await budgetStatus();
   return {
     today, part, profile, settings, edition, stories, briefing: todaysBriefing, todayEvents, tomorrowEvents, active, completedRecent, approvals, drafts,
+    money,
     people: fallbackPeople, outfit, wardrobe, experiences, opp, opportunities, logs, reminders: [...new Set(reminders)], saved, weather, budget,
     connected: Boolean(env.anthropicApiKey),
   };

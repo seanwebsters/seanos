@@ -145,3 +145,41 @@ describe("calendar & schedule", () => {
     expect(w.toISOString()).toBe("2026-12-07T09:00:00.000Z");
   });
 });
+
+import { categorise, parseBankCsv, summarise, advance } from "@/lib/finance";
+
+describe("finance", () => {
+  it("parses a Monzo-style CSV with signed amounts and categories", () => {
+    const csv = `Transaction ID,Date,Time,Type,Name,Emoji,Category,Amount,Currency\ntx1,14/10/2026,09:12,Card payment,Pret A Manger,,eating_out,-4.50,GBP\ntx2,15/10/2026,10:00,Faster payment,CALM STUDIOS LTD,,income,"2,500.00",GBP`;
+    const { rows } = parseBankCsv(csv);
+    expect(rows).toEqual([
+      { date: "2026-10-14", description: "Pret A Manger", amount: -4.5, category: "Eating out" },
+      { date: "2026-10-15", description: "CALM STUDIOS LTD", amount: 2500, category: "Income" },
+    ]);
+  });
+
+  it("parses paid-in / paid-out columns", () => {
+    const csv = `Date,Description,Paid out,Paid in,Balance\n01/10/2026,TFL TRAVEL CHARGE,7.80,,100\n02/10/2026,REFUND,,12.00,112`;
+    const { rows } = parseBankCsv(csv);
+    expect(rows.map((r) => r.amount)).toEqual([-7.8, 12]);
+    expect(categorise(rows[0].description, rows[0].amount)).toBe("Transport");
+  });
+
+  it("summarises budgets, subscriptions and net worth", () => {
+    const t = (id: string, date: string, amount: number, category: string) => ({ id, date, description: id, amount, category, account_id: null, source: "manual" as const, import_hash: null, notes: "", created_at: "" });
+    const s = summarise({
+      today: "2026-10-15",
+      txns: [t("a", "2026-10-02", -120, "Eating out"), t("b", "2026-10-03", 3000, "Income"), t("c", "2026-10-04", -500, "Transfers"), t("d", "2026-09-04", -80, "Eating out")],
+      budgets: [{ id: "Eating out", monthly_limit: 100, updated_at: "" }],
+      recurring: [{ id: "r", name: "Spotify", amount: 11.99, kind: "subscription", cadence: "monthly", next_date: "2026-10-20", category: "Subscriptions", active: true, created_at: "" }],
+      accounts: [{ id: "x", name: "Current", kind: "current", balance: 2000, currency: "GBP", updated_at: "" }, { id: "y", name: "Amex", kind: "credit", balance: -300, currency: "GBP", updated_at: "" }],
+      goals: [],
+    });
+    expect(s.spendThisMonth).toBe(120);
+    expect(s.budgetRows[0].over).toBe(true);
+    expect(s.upcoming).toHaveLength(1);
+    expect(s.netWorth).toBe(1700);
+    expect(s.months.at(-2)!.spend).toBe(80);
+    expect(advance("2026-01-31", "monthly")).toBe("2026-03-03");
+  });
+});

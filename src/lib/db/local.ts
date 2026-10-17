@@ -31,6 +31,8 @@ export class LocalDatabase implements Database {
   }
 
   private rows<K extends TableName>(t: K): Tables[K][] {
+    // Tables added in newer versions appear empty in older data files.
+    (this.data as Record<string, unknown[]>)[t] ??= [];
     return this.data[t] as Tables[K][];
   }
 

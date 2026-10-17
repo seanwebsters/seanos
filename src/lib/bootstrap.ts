@@ -88,6 +88,7 @@ export const DEFAULT_AUTOMATIONS: AutoSeed[] = [
   { workflow: "speaking_scan", name: "Speaking scout", description: "Conferences, podcasts and panels with open routes in.", cadence: "weekly", weekday: 2, hour: 5, minute: 0, est_cost_cents: 60 },
   { workflow: "opportunity_engine", name: "Opportunity engine", description: "Connects trends, ideas, people, events and partnerships into actionable opportunities.", cadence: "weekly", weekday: 4, hour: 5, minute: 0, est_cost_cents: 40 },
   { workflow: "opportunity_report", name: "Friday opportunity report", description: "The strongest discoveries of the week.", cadence: "weekly", weekday: 5, hour: 6, minute: 30, est_cost_cents: 30 },
+  { workflow: "finance_review", name: "Money check-in", description: "Spending vs budget, upcoming bills, subscriptions and progress on savings goals.", cadence: "weekly", weekday: 0, hour: 9, minute: 30, est_cost_cents: 15 },
   { workflow: "weekly_review", name: "Weekly review", description: "Projects, goals and what to focus on next week.", cadence: "weekly", weekday: 0, hour: 17, minute: 0, est_cost_cents: 20 },
 ];
 

@@ -246,6 +246,7 @@ const MORE = [
   { href: "/ideas", label: "Ideas", icon: "bulb" },
   { href: "/speaking", label: "Speaking", icon: "stage" },
   { href: "/people", label: "People", icon: "people" },
+  { href: "/finance", label: "Finance", icon: "wallet" },
   { href: "/calmlings", label: "Calmlings", icon: "briefcase" },
   { href: "/tasks", label: "Tasks", icon: "tasks" },
   { href: "/intelligence", label: "Intelligence", icon: "chart" },

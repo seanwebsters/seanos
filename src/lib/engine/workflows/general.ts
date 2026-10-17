@@ -206,6 +206,7 @@ const CAPABILITIES: Record<string, { workflow?: string; describe: string }> = {
   shopping: { workflow: "shopping", describe: "Research clothes or products to buy, with real links" },
   edition: { workflow: "edition", describe: "Generate today's newspaper" },
   outfit: { workflow: "outfit", describe: "Suggest today's outfit" },
+  finance: { workflow: "finance_plan", describe: "Budgets, spending review, savings plans and money questions, using Sean's real finance data (Financial Planner)" },
 };
 
 const PlanZ = z.object({

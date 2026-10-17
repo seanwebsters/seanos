@@ -2,6 +2,7 @@ import "server-only";
 import type { TableName } from "@/lib/db/types";
 import { newId, nowIso } from "@/lib/util";
 import { londonDate } from "@/lib/time";
+import { categorise } from "@/lib/finance";
 
 type Spec = { patch: string[]; create?: (input: Record<string, unknown>) => Record<string, unknown>; remove?: boolean; touch?: string };
 
@@ -47,6 +48,27 @@ export const ENTITIES: Partial<Record<TableName, Spec>> = {
     create: (i) => ({ id: newId("life"), kind: str(i.kind, "workout"), title: str(i.title), amount: typeof i.amount === "number" ? i.amount : null, target: typeof i.target === "number" ? i.target : null, progress: typeof i.progress === "number" ? i.progress : null, date: str(i.date) || londonDate(), notes: str(i.notes), done: false, created_at: nowIso() }),
   },
   notifications: { patch: ["read"], remove: true },
+  transactions: {
+    patch: ["date", "description", "amount", "category", "notes", "account_id"], remove: true,
+    create: (i) => {
+      const amount = typeof i.amount === "number" ? i.amount : Number(i.amount);
+      const out = i.direction === "in" ? Math.abs(amount) : -Math.abs(amount);
+      return { id: newId("txn"), date: str(i.date) || londonDate(), description: str(i.description, "Untitled"), amount: Number.isFinite(out) ? Math.round(out * 100) / 100 : 0, category: str(i.category) || categorise(str(i.description), out), account_id: str(i.account_id) || null, source: "manual", import_hash: null, notes: str(i.notes), created_at: nowIso() };
+    },
+  },
+  accounts: {
+    patch: ["name", "kind", "balance", "currency"], remove: true, touch: "updated_at",
+    create: (i) => ({ id: newId("acc"), name: str(i.name, "Account"), kind: str(i.kind, "current"), balance: Number(i.balance) || 0, currency: str(i.currency, "GBP"), updated_at: nowIso() }),
+  },
+  budgets: { patch: ["monthly_limit"], remove: true, touch: "updated_at", create: (i) => ({ id: str(i.category, "Other"), monthly_limit: Math.max(0, Number(i.monthly_limit) || 0), updated_at: nowIso() }) },
+  recurring: {
+    patch: ["name", "amount", "kind", "cadence", "next_date", "category", "active"], remove: true,
+    create: (i) => ({ id: newId("rec"), name: str(i.name, "Bill"), amount: Math.abs(Number(i.amount) || 0), kind: ["bill", "subscription", "income"].includes(str(i.kind)) ? i.kind : "bill", cadence: ["weekly", "monthly", "yearly"].includes(str(i.cadence)) ? i.cadence : "monthly", next_date: str(i.next_date) || londonDate(), category: str(i.category) || (i.kind === "subscription" ? "Subscriptions" : i.kind === "income" ? "Income" : "Rent & bills"), active: true, created_at: nowIso() }),
+  },
+  finance_goals: {
+    patch: ["name", "target", "saved", "deadline"], remove: true,
+    create: (i) => ({ id: newId("fg"), name: str(i.name, "Goal"), target: Math.max(0, Number(i.target) || 0), saved: Math.max(0, Number(i.saved) || 0), deadline: str(i.deadline) || null, created_at: nowIso() }),
+  },
 };
 
 export function pick(input: Record<string, unknown>, fields: string[]) {

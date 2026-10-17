@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/bootstrap";
 import { nowIso } from "@/lib/util";
 import { createTask, tick } from "./jobs";
 import { nextRunAt } from "./schedule";
+import { rollRecurring } from "./workflows/finance";
 
 export { createTask, tick, controlTask, runTask, getWorkflow } from "./jobs";
 
@@ -38,6 +39,7 @@ export async function runAutomations(now = new Date()): Promise<number> {
 
 /** One heartbeat: schedule, then work. */
 export async function heartbeat() {
+  await rollRecurring().catch(() => {});
   await runAutomations();
   await tick();
 }

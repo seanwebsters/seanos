@@ -1,6 +1,6 @@
 # SEAN OS
 
-A private, mobile-first AI organisation for one person. A team of fifteen specialist agents researches, writes, plans and prepares work around the clock, and presents everything for approval. It's an installable PWA with a desktop layout.
+A private, mobile-first AI organisation for one person. A team of sixteen specialist agents researches, writes, plans and prepares work around the clock, and presents everything for approval. It's an installable PWA with a desktop layout.
 
 **What it does**
 
@@ -11,7 +11,8 @@ A private, mobile-first AI organisation for one person. A team of fifteen specia
 * **Opportunities**: Trend Radar (weak signals with measured vs anecdotal evidence and capped momentum), the Venture Studio (5–10 ideas a week, fewer if fewer are good), the Speaking Scout (verified dates, deadlines and submission routes; passed deadlines dropped) and the Opportunity Engine, which links trends, ideas, people, events and partnerships into actionable bundles. There's a daily picks rail on Home and a Friday report.
 * **People**: ten verified people a week, a Daily Three, casual messages and a private CRM (notes, interactions, reminders, contacted status).
 * **Tasks**: delegate anything by typing or speaking. The Chief of Staff plans, assigns specialists and runs them as persistent background jobs, with retries, step logs, citations and cost. You can pause, resume, cancel, retry, repeat and reschedule. Saying "every Monday…" creates an automation.
-* **Life**: London picks, calendar with meeting prep, fitness log, spending and savings goals, trips and learning goals.
+* **Finance**: a private financial planner and tracker. Import CSV statements from any UK bank (Monzo, Starling, Revolut, HSBC, Barclays, Amex…), with duplicates skipped and transactions auto-categorised by rules and then by the Financial Planner agent. You get monthly budgets with pace warnings, bills and subscriptions (with an audit), savings goals with the monthly amount needed, net worth from your accounts, a six-month cashflow chart and a weekly Money check-in. Upcoming bills appear in your morning briefing. It's general guidance, not regulated advice, and there's no bank connection.
+* **Life**: London picks, calendar with meeting prep, fitness log, trips and learning goals.
 * **Wardrobe**: photograph your clothes and the stylist catalogues them. A daily outfit is built from live weather, your calendar and what you own. Shopping research uses real links, on a "fewer, better" basis.
 * **Agents**: an activity centre derived entirely from real task, step and approval rows. Each agent's instructions, model and on/off switch are editable.
 * **Memory**: facts vs inferences, with provenance, confidence and scope (personal / work / public). You can edit, delete and export it. Feedback buttons across the app ("too corporate", "more like this", "don't recommend again") feed back into it.
@@ -55,7 +56,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
-2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 3. Set `OWNER_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY` and `CRON_SECRET`.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 

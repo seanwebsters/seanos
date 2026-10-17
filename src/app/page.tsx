@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { AgentBadge, Art, Empty, Img, List, Pill, Rail, Row, Section, agentName } from "@/components/ui";
 import { CopyButton, Delegate, LiveRefresh, Patch } from "@/components/client";
 import { describeSchedule } from "@/lib/engine/schedule";
+import { gbp } from "@/lib/finance";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,12 @@ export default async function Home() {
     reading: d.saved.length || d.edition?.big_idea ? <Reading key="reading" d={d} /> : null,
     tomorrow: <Tomorrow key="tomorrow" d={d} />,
     reminders: d.reminders.length ? <Reminders key="reminders" d={d} /> : null,
+    money: d.money ? <Money key="money" d={d} /> : null,
   };
   const order: (keyof typeof cards)[] =
-    part === "morning" ? ["briefing", "edition", "completed", "opportunities", "approvals", "people", "outfit", "calendar", "reminders", "london", "active", "activity"]
-    : part === "day" ? ["calendar", "active", "opportunities", "approvals", "briefing", "people", "edition", "completed", "london", "reminders", "activity"]
-    : ["completed", "reading", "tomorrow", "approvals", "opportunities", "london", "people", "edition", "reminders", "activity"];
+    part === "morning" ? ["briefing", "edition", "completed", "opportunities", "approvals", "people", "outfit", "calendar", "money", "reminders", "london", "active", "activity"]
+    : part === "day" ? ["calendar", "active", "opportunities", "approvals", "briefing", "people", "edition", "completed", "money", "london", "reminders", "activity"]
+    : ["completed", "reading", "tomorrow", "approvals", "opportunities", "money", "london", "people", "edition", "reminders", "activity"];
 
   return (
     <div>
@@ -417,6 +419,23 @@ function Tomorrow({ d }: { d: D }) {
       ) : (
         <Empty icon="calendar" title="Nothing scheduled tomorrow" body={d.settings.autopilot ? `Your morning run is set: ${describeSchedule({ cadence: "daily", weekday: null, hour: 5, minute: 30 }).toLowerCase()}.` : "Turn on Autopilot to wake up to a fresh edition and briefing."} />
       )}
+    </Section>
+  );
+}
+
+function Money({ d }: { d: D }) {
+  const m = d.money!;
+  const watch = m.budgetRows.filter((b) => b.over || b.ahead);
+  return (
+    <Section title="Money" href="/finance">
+      <Link href="/finance" className="mx-5 block card p-4 lg:mx-0">
+        <div className="grid grid-cols-3 gap-3">
+          <div><div className="eyebrow text-[10px]">Spent</div><div className="display text-[26px] leading-tight">{gbp(m.spendThisMonth)}</div></div>
+          <div><div className="eyebrow text-[10px]">Budget left</div><div className="display text-[26px] leading-tight">{m.totalBudget ? gbp(m.budgetLeft) : "—"}</div></div>
+          <div><div className="eyebrow text-[10px]">Next bill</div><div className="truncate pt-1.5 text-[13.5px]">{m.upcoming.find((r) => r.kind !== "income") ? `${m.upcoming.find((r) => r.kind !== "income")!.name} · ${fmtDate(m.upcoming.find((r) => r.kind !== "income")!.next_date)}` : "None soon"}</div></div>
+        </div>
+        {watch.length > 0 && <div className="mt-3 text-[12.5px] text-rose">⚠ {watch.map((b) => `${b.category} ${b.over ? "over budget" : "ahead of pace"}`).join(" · ")}</div>}
+      </Link>
     </Section>
   );
 }

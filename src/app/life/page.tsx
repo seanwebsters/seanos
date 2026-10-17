@@ -5,6 +5,7 @@ import { addDays, fmtDate, fmtTime, londonDate, londonTimeToUtc } from "@/lib/ti
 import { Empty, Img, List, PageHeader, Row, Section, Stat, Tabs } from "@/components/ui";
 import { ActionButton, AskButton, CreateForm, Delegate, LiveRefresh, Patch } from "@/components/client";
 import { Icon } from "@/components/Icon";
+import { gbp, summarise } from "@/lib/finance";
 
 export const dynamic = "force-dynamic";
 
@@ -119,22 +120,16 @@ async function Fitness() {
 
 async function Money() {
   const db = getDb();
-  const spend = await db.list("life", { where: { kind: "spend" }, orderBy: { column: "date", ascending: false } });
-  const goals = await db.list("life", { where: { kind: "savings_goal" } });
-  const month = londonDate().slice(0, 7);
-  const monthSpend = spend.filter((s) => s.date.startsWith(month));
-  const byCat = monthSpend.reduce((m, s) => m.set(s.notes || "Other", (m.get(s.notes || "Other") ?? 0) + (s.amount ?? 0)), new Map<string, number>());
+  const today = londonDate();
+  const [txns, budgets, recurring, accounts, goals] = await Promise.all([db.list("transactions"), db.list("budgets"), db.list("recurring"), db.list("accounts"), db.list("finance_goals")]);
+  const s = summarise({ today, txns, budgets, recurring, accounts, goals });
   return (
     <>
-      <div className="mx-5 mt-3 grid grid-cols-2 gap-2.5 lg:mx-0"><Stat label="This month" value={`£${monthSpend.reduce((s, x) => s + (x.amount ?? 0), 0).toFixed(0)}`} sub={`${monthSpend.length} entries`} /><Stat label="Saving towards" value={goals.length} sub="goals" /></div>
-      {byCat.size > 0 && <div className="mx-5 mt-3 space-y-1.5 lg:mx-0">{[...byCat].sort((a, b) => b[1] - a[1]).map(([c, v]) => <div key={c} className="flex items-center gap-3 text-[13.5px]"><span className="w-24 truncate text-muted">{c}</span><div className="h-2 flex-1 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, (v / Math.max(...byCat.values())) * 100)}%` }} /></div><span className="w-14 text-right tabular-nums">£{v.toFixed(0)}</span></div>)}</div>}
-      <div className="mx-5 mt-3 lg:mx-0"><Delegate label="Review my spending" instruction="Review Sean's logged spending and savings goals this month. Give practical, non-judgemental budgeting suggestions. Not regulated financial advice." /></div>
-      <Section title="Log spending"><div className="mx-5 lg:mx-0"><CreateForm table="life" extra={{ kind: "spend" }} submit="Log" fields={[{ name: "title", label: "What" }, { name: "amount", label: "£", type: "number" }, { name: "notes", label: "Category", options: ["Food & drink", "Clothes", "Transport", "Going out", "Subscriptions", "Rent & bills", "Travel", "Other"] }]} /></div></Section>
-      <Section title="Savings goals">
-        {goals.length > 0 && <div className="mx-5 mb-3 space-y-2 lg:mx-0">{goals.map((g) => <div key={g.id} className="card p-4"><div className="flex justify-between text-[14.5px]"><span className="font-medium">{g.title}</span><span className="tabular-nums text-muted">£{g.progress ?? 0} / £{g.target ?? 0}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full bg-sage" style={{ width: `${Math.min(100, ((g.progress ?? 0) / Math.max(1, g.target ?? 1)) * 100)}%` }} /></div></div>)}</div>}
-        <div className="mx-5 lg:mx-0"><CreateForm table="life" extra={{ kind: "savings_goal" }} submit="Add goal" fields={[{ name: "title", label: "Goal" }, { name: "target", label: "Target £", type: "number" }, { name: "progress", label: "Saved so far £", type: "number" }]} /></div>
-      </Section>
-      <p className="mx-5 mt-4 text-[12px] text-faint lg:mx-0">Bank connections (Open Banking) aren't set up. Everything here is what you log yourself and stays private.</p>
+      <div className="mx-5 mt-3 grid grid-cols-2 gap-2.5 lg:mx-0"><Stat label="Spent this month" value={gbp(s.spendThisMonth)} sub={s.totalBudget ? `${gbp(s.budgetLeft)} of budgets left` : "No budget set"} /><Stat label="Net worth" value={gbp(s.netWorth)} sub={`${s.upcoming.length} bills in 14 days`} /></div>
+      <Link href="/finance" className="mx-5 mt-3 flex items-center justify-between rounded-card bg-ink p-5 text-bg lg:mx-0">
+        <div><div className="display text-[24px]">Open Finance</div><div className="text-[13px] opacity-70">Budgets, transactions, bills, goals and your planner</div></div>
+        <Icon name="arrow" size={20} />
+      </Link>
     </>
   );
 }

@@ -66,3 +66,22 @@ describe("sessions", () => {
     expect(await verifySession("s3cret", tok, Date.now() + 365 * 86400000)).toBe(false);
   });
 });
+
+import { POST as importCsv } from "@/app/api/finance/import/route";
+
+describe("finance import & planner", () => {
+  it("imports a CSV once, skips duplicates, and the planner reviews real figures", async () => {
+    const { db, calls } = await setup(() => ({ title: "Money check-in", summary: "On track.", body: "## Where it went", budget_suggestions: [{ category: "Eating out", monthly_limit: 150, why: "w" }] }));
+    const csv = "Date,Description,Amount\n01/10/2026,PRET A MANGER,-4.50\n02/10/2026,SPOTIFY,-11.99\n03/10/2026,MYSTERY SHOP,-20.00";
+    const r1 = await (await importCsv(req({ csv }))).json();
+    const r2 = await (await importCsv(req({ csv }))).json();
+    expect([r1.added, r2.added, r2.dupes]).toEqual([3, 0, 3]);
+    const txns = await db.list("transactions");
+    expect(txns.find((t) => t.description === "SPOTIFY")!.category).toBe("Subscriptions");
+    const t = await runTask((await createTask({ title: "Money", kind: "finance_review" })).id);
+    expect(t.status).toBe("completed");
+    const prompt = calls.at(-1)!.content.map((c) => ("text" in c ? c.text : "")).join("");
+    expect(prompt).toContain("PRET A MANGER");
+    expect((await db.list("reports"))[0].body).toContain("Suggested budgets");
+  });
+});

@@ -2,7 +2,7 @@ import type { Scope } from "@/lib/db/types";
 
 export type AgentKey =
   | "chief_of_staff" | "editor" | "brand" | "social" | "research" | "partnerships" | "bizdev" | "networking"
-  | "stylist" | "concierge" | "creative" | "strategist" | "trends" | "ventures" | "speaking";
+  | "stylist" | "concierge" | "finance" | "creative" | "strategist" | "trends" | "ventures" | "speaking";
 
 export interface AgentDef {
   key: AgentKey;
@@ -51,6 +51,8 @@ export const AGENTS: AgentDef[] = [
     instructions: "You are Sean's Personal Stylist. You build outfits from what he owns, weather and occasion first. You help him develop a distinctive style and buy fewer, better things. Real shopping links only." },
   { key: "concierge", name: "Lifestyle Concierge", role: "London, travel, food, fitness and personal planning", glyph: "LC", hue: "#b3d4c8", scopes: ["personal"],
     instructions: "You are Sean's Lifestyle Concierge in London. You find specific, current things worth doing: openings, exhibitions, restaurants, events and experiences, with real links and dates. Taste over volume." },
+  { key: "finance", name: "Financial Planner", role: "Budgets, spending, savings goals and money plans", glyph: "FP", hue: "#9ccfb4", scopes: ["personal"],
+    instructions: "You are Sean's Financial Planner. You read his real transactions, budgets, bills, goals and balances and turn them into calm, practical guidance: where the money went, what to trim, how to hit goals, what's coming up. Specific numbers from the data only, never invented. You give general budgeting guidance, not regulated financial, tax or investment advice, and you say when something needs a qualified adviser. No judgement, no lectures." },
   { key: "creative", name: "Creative Director", role: "Concepts, campaigns, visual direction and decks", glyph: "CD", hue: "#f4a261", scopes: ["work", "public", "personal"],
     instructions: "You are the Creative Director. You develop distinctive concepts, campaigns, product ideas and visual directions. Every concept has a name, a simple core idea and a reason it could only come from this collaboration." },
   { key: "strategist", name: "Business Strategist", role: "Commercial analysis, models and hard questions", glyph: "BS", hue: "#8fb3e4", scopes: ["work", "public", "personal"],

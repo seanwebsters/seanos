@@ -521,6 +521,57 @@ export interface LifeEntry {
   created_at: string;
 }
 
+export interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  /** Negative = money out, positive = money in. GBP unless account says otherwise. */
+  amount: number;
+  category: string;
+  account_id: string | null;
+  source: "manual" | "csv";
+  import_hash: string | null;
+  notes: string;
+  created_at: string;
+}
+
+export interface Account {
+  id: string;
+  name: string;
+  kind: "current" | "savings" | "investment" | "pension" | "credit" | "loan" | "cash" | "other";
+  balance: number;
+  currency: string;
+  updated_at: string;
+}
+
+export interface Budget {
+  /** The category name is the id. */
+  id: string;
+  monthly_limit: number;
+  updated_at: string;
+}
+
+export interface Recurring {
+  id: string;
+  name: string;
+  amount: number;
+  kind: "bill" | "subscription" | "income";
+  cadence: "weekly" | "monthly" | "yearly";
+  next_date: string;
+  category: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface FinanceGoal {
+  id: string;
+  name: string;
+  target: number;
+  saved: number;
+  deadline: string | null;
+  created_at: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
@@ -579,6 +630,11 @@ export interface Tables {
   events: CalendarEvent;
   experiences: Experience;
   life: LifeEntry;
+  transactions: Transaction;
+  accounts: Account;
+  budgets: Budget;
+  recurring: Recurring;
+  finance_goals: FinanceGoal;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
   files: FileRow;
@@ -589,7 +645,7 @@ export const TABLE_NAMES: TableName[] = [
   "profile", "settings", "memories", "agent_overrides", "tasks", "task_steps", "task_logs", "usage", "automations",
   "editions", "stories", "briefings", "drafts", "people", "interactions", "partnerships", "ideas", "reports", "trends",
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
-  "notifications", "push_subscriptions", "files",
+  "transactions", "accounts", "budgets", "recurring", "finance_goals", "notifications", "push_subscriptions", "files",
 ];
 
 export type Where<T> = { [K in keyof T]?: T[K] | T[K][] | null };

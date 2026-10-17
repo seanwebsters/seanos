@@ -145,6 +145,7 @@ export async function runBriefing(ctx: RunContext): Promise<Briefing> {
   const followUps = (await db.list("outreach")).filter((o) => o.follow_up_at && o.follow_up_at.slice(0, 10) <= date && o.status === "sent").map((o) => `Follow up: ${o.target_name}`);
   const deadlines = (await db.list("speaking")).filter((s) => s.deadline && s.deadline >= date && s.deadline <= addDays(date, 10) && !["dismissed", "applied"].includes(s.status)).map((s) => `${s.name} speaker deadline ${s.deadline}`);
   const goals = (await db.list("life", { where: { kind: ["learning_goal", "savings_goal"], done: false } })).map((g) => g.title);
+  const bills = (await db.list("recurring", { where: { active: true } })).filter((r) => r.kind !== "income" && r.next_date >= date && r.next_date <= addDays(date, 3)).map((r) => `${r.name} £${r.amount.toFixed(2)} due ${r.next_date === date ? "today" : r.next_date}`);
   const edition = (await db.list("editions", { where: { date, status: "ready" } }))[0];
   const headlines = edition ? (await db.list("stories", { where: { edition_id: edition.id } })).slice(0, 6).map((s) => s.headline) : [];
   const weather = await getWeather(profile.home_lat, profile.home_lng);
@@ -155,14 +156,14 @@ export async function runBriefing(ctx: RunContext): Promise<Briefing> {
       taskId: ctx.task.id,
       schema: BriefZ,
       effort: "low",
-      prompt: `Prepare Sean's morning briefing.\nWeather: ${weather ? `${weather.summary}, ${weather.temp_c}°C (high ${weather.high_c}°, ${weather.rain_chance}% rain)` : "unavailable"}\nCalendar today: ${events.map((e) => `${e.all_day ? "All day" : fmtTime(e.start)} ${e.title}${e.location ? ` @ ${e.location}` : ""}`).join("; ") || "nothing scheduled (calendar may not be connected)"}\nOpen tasks: ${tasks.map((t) => `${t.title} [${t.status}] /tasks/${t.id}`).join("; ") || "none"}\nAwaiting approval: ${approvals.length} items (/approvals)\nPeople to reach out to today: ${people.join("; ") || "none"}\nReminders due: ${[...reminders, ...followUps, ...deadlines].join("; ") || "none"}\nGoals: ${goals.join("; ") || "none set"}\nToday's headlines: ${headlines.join("; ") || "edition not ready"}\nOpportunity picks: ${picks.summary || "none"}\n\nGive exactly three priorities. Only include plan items from the calendar or clearly useful focus blocks. Never invent meetings.`,
+      prompt: `Prepare Sean's morning briefing.\nWeather: ${weather ? `${weather.summary}, ${weather.temp_c}°C (high ${weather.high_c}°, ${weather.rain_chance}% rain)` : "unavailable"}\nCalendar today: ${events.map((e) => `${e.all_day ? "All day" : fmtTime(e.start)} ${e.title}${e.location ? ` @ ${e.location}` : ""}`).join("; ") || "nothing scheduled (calendar may not be connected)"}\nOpen tasks: ${tasks.map((t) => `${t.title} [${t.status}] /tasks/${t.id}`).join("; ") || "none"}\nAwaiting approval: ${approvals.length} items (/approvals)\nPeople to reach out to today: ${people.join("; ") || "none"}\nReminders due: ${[...reminders, ...followUps, ...deadlines, ...bills].join("; ") || "none"}\nGoals: ${goals.join("; ") || "none set"}\nToday's headlines: ${headlines.join("; ") || "edition not ready"}\nOpportunity picks: ${picks.summary || "none"}\n\nGive exactly three priorities. Only include plan items from the calendar or clearly useful focus blocks. Never invent meetings.`,
     });
     return r.data;
   });
   const existing = (await db.list("briefings", { where: { date } }))[0];
   const row: Briefing = {
     id: existing?.id ?? newId("brf"), date, summary: brief.summary, priorities: brief.priorities.slice(0, 3),
-    reminders: [...new Set([...brief.reminders, ...reminders, ...followUps, ...deadlines])], plan: brief.plan, opportunity_action: brief.opportunity_action,
+    reminders: [...new Set([...brief.reminders, ...reminders, ...followUps, ...deadlines, ...bills])], plan: brief.plan, opportunity_action: brief.opportunity_action,
     opportunity_picks: picks.ids, task_id: ctx.task.id, created_at: nowIso(),
   };
   await db.upsert("briefings", row);
