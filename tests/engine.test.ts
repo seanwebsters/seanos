@@ -1,0 +1,147 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { setup, src } from "./helpers";
+import { createTask, runTask, runAutomations } from "@/lib/engine";
+import { setTransport } from "@/lib/ai/llm";
+import { RetryableError } from "@/lib/ai/errors";
+import { buildContext } from "@/lib/ai/context";
+import { parseIcs, expand } from "@/lib/integrations/calendar";
+import { nextRunAt } from "@/lib/engine/schedule";
+
+afterEach(() => setTransport(null));
+
+const story = (section: string, headline: string, url: string) => ({ section, headline, dek: "d", what: "w", why: "y", implications: "i", ideas: ["x"], topics: ["ai"], sources: [src(url)] });
+
+describe("newsroom", () => {
+  it("publishes an edition with only verified stories", async () => {
+    const { db } = await setup((req, text) => {
+      if (text.includes("Research and write today's stories")) {
+        return { stories: [story("AI & Creative Technology", "Real story", "https://theverge.com/ai/1/"), story("London", "Made up", "https://fake.example/nope")] };
+      }
+      return { title: "Edition", standfirst: "s", big_idea: "b", for_me: "f" };
+    });
+    const t = await createTask({ title: "Edition", kind: "edition" });
+    const done = await runTask(t.id);
+    expect(done.status).toBe("completed");
+    const stories = await db.list("stories");
+    expect(stories.map((s) => s.headline)).toEqual(["Real story", "Real story", "Real story"].slice(0, stories.length));
+    expect(stories.every((s) => s.headline !== "Made up")).toBe(true);
+    const ed = (await db.list("editions"))[0];
+    expect(ed.status).toBe("ready");
+    expect(done.cost_cents).toBeGreaterThan(0);
+    expect((await db.list("task_steps", { where: { task_id: t.id } })).every((s) => s.status === "done")).toBe(true);
+  });
+});
+
+describe("engine", () => {
+  it("blocks with a clear reason when no API key is configured", async () => {
+    const { db } = await setup(() => ({}));
+    setTransport(null);
+    const t = await createTask({ title: "Research", kind: "research_report", instruction: "Research AI animation" });
+    const done = await runTask(t.id);
+    expect(done.status).toBe("blocked");
+    expect(done.blocked_on).toBe("ANTHROPIC_API_KEY");
+    expect((await db.list("notifications")).some((n) => n.title.startsWith("Blocked"))).toBe(true);
+  });
+
+  it("retries transient failures with backoff and resumes finished steps", async () => {
+    let n = 0;
+    const { db } = await setup((req, text) => {
+      if (text.includes("Planning") || text.includes("Plan the work")) return { title: "Market", objective: "o", recurrence: null, steps: [{ agent: "research", capability: "research", instruction: "Research the AI animation market", count: null, focus: null }] };
+      n++;
+      if (n === 1) throw new RetryableError("flaky");
+      return { title: "AI animation", summary: "sum", body: "## Body", slides: [], image_prompts: [], sources: [src("https://www.ft.com/content/abc"), src("https://invented.example/x")] };
+    });
+    const t = await createTask({ title: "Research the AI animation market", kind: "freeform", instruction: "Research the AI animation market" });
+    const first = await runTask(t.id);
+    expect(first.status).toBe("queued");
+    expect(new Date(first.scheduled_for).getTime()).toBeGreaterThan(Date.now());
+    const second = await runTask(t.id);
+    expect(second.status).toBe("completed");
+    const reps = await db.list("reports");
+    expect(reps).toHaveLength(1);
+    expect(reps[0].sources.map((s) => s.url)).toEqual(["https://www.ft.com/content/abc"]);
+    const steps = await db.list("task_steps", { where: { task_id: t.id } });
+    expect(steps.filter((s) => s.title.includes("planning"))).toHaveLength(1);
+  });
+
+  it("creates a recurring automation when asked", async () => {
+    const { db } = await setup((req, text) =>
+      text.includes("Plan the work")
+        ? { title: "Weekly partners", objective: "o", recurrence: { cadence: "weekly", weekday: 1, hour: 8, minute: 0 }, steps: [{ agent: "research", capability: "write", instruction: "List", count: null, focus: null }] }
+        : { title: "Doc", summary: "s", body: "b", slides: [], image_prompts: [], sources: [] },
+    );
+    const t = await createTask({ title: "Every Monday, find me new partnership opportunities", kind: "freeform" });
+    await runTask(t.id);
+    expect((await db.list("automations")).some((a) => a.workflow === "freeform" && a.weekday === 1)).toBe(true);
+  });
+
+  it("enforces the daily budget", async () => {
+    const { db } = await setup(() => ({ title: "x", summary: "s", body: "b", slides: [], image_prompts: [], sources: [] }));
+    await db.update("settings", "app", { daily_budget_cents: 0 });
+    const t = await createTask({ title: "r", kind: "research_report" });
+    const done = await runTask(t.id);
+    expect(done.status).toBe("blocked");
+    expect(done.blocked_on).toBe("budget");
+  });
+
+  it("only runs automations when Autopilot is on", async () => {
+    const { db } = await setup(() => ({}));
+    const autos = await db.list("automations");
+    for (const a of autos) await db.update("automations", a.id, { next_run_at: new Date(Date.now() - 1000).toISOString() });
+    expect(await runAutomations()).toBe(0);
+    await db.update("settings", "app", { autopilot: true });
+    expect(await runAutomations()).toBe(autos.length);
+    expect(await runAutomations()).toBe(0);
+  });
+});
+
+describe("privacy", () => {
+  it("keeps Calm work memory away from public-content agents", async () => {
+    const { db } = await setup(() => ({}));
+    await db.insert("memories", { id: "m1", category: "Calm", content: "Confidential: unannounced Calmlings film slate", kind: "fact", scope: "work", source: "user", provenance: null, confidence: 1, pinned: false, created_at: "2026-01-01", updated_at: "2099-01-01" });
+    const brand = await buildContext("brand");
+    const partner = await buildContext("partnerships");
+    expect(brand).not.toContain("unannounced");
+    expect(partner).toContain("unannounced");
+  });
+});
+
+describe("opportunities", () => {
+  it("drops speaking events with passed deadlines and unverified sources", async () => {
+    const ev = (name: string, deadline: string | null, url: string, cfp = "open") => ({ name, kind: "conference", location: "London", start_date: "2099-03-01", end_date: null, organiser: "o", audience: "a", size: null, fit: "f", talk_titles: ["t"], cfp_status: cfp, deadline, submission_url: url, contacts: [], networking: "n", next_action: "apply", sources: [src(url)] });
+    const { db } = await setup(() => ({ events: [ev("Good", "2099-01-01", "https://example-conf.com/speak"), ev("Late", "2001-01-01", "https://example-conf.com/speak"), ev("Rolling", "2001-01-01", "https://example-conf.com/speak", "rolling"), ev("Fake", null, "https://nope.example/x")] }));
+    const t = await createTask({ title: "Speaking", kind: "speaking_scan" });
+    await runTask(t.id);
+    const names = (await db.list("speaking")).map((s) => s.name).sort();
+    expect(names).toEqual(["Good", "Rolling"]);
+  });
+
+  it("dedupes trends and caps momentum without measured evidence", async () => {
+    const trend = { title: "AI companions for kids", category: "AI", region: "US", what: "w", evidence: [{ claim: "c", kind: "anecdotal", source_url: "https://www.theverge.com/ai/1", date: null }], why: "y", drivers: [], maturity: "emerging", momentum: 5, opportunity_score: 8, prediction: "p", relevance: "r", opportunities: [], calm_applications: [], sources: [src("https://www.theverge.com/ai/1")] };
+    const { db } = await setup(() => ({ trends: [trend] }));
+    await runTask((await createTask({ title: "Trends", kind: "trend_scan" })).id);
+    await runTask((await createTask({ title: "Trends", kind: "trend_scan" })).id);
+    const rows = await db.list("trends");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].momentum).toBe(3);
+    expect(rows[0].seen_count).toBe(2);
+  });
+});
+
+describe("calendar & schedule", () => {
+  it("parses ICS with weekly recurrence", () => {
+    const ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:1\nSUMMARY:Standup\nDTSTART:20991006T090000Z\nDTEND:20991006T093000Z\nRRULE:FREQ=WEEKLY\nEND:VEVENT\nBEGIN:VEVENT\nUID:2\nSUMMARY:Holiday\nDTSTART;VALUE=DATE:20991007\nEND:VEVENT\nEND:VCALENDAR";
+    const evs = parseIcs(ics);
+    expect(evs).toHaveLength(2);
+    expect(evs[1].allDay).toBe(true);
+    const ex = expand(evs, new Date("2099-10-05T00:00:00Z"), new Date("2099-10-21T00:00:00Z"));
+    expect(ex.filter((e) => e.summary === "Standup")).toHaveLength(3);
+  });
+
+  it("computes the next London run", () => {
+    const at = nextRunAt({ cadence: "daily", weekday: null, hour: 5, minute: 30 }, new Date("2026-07-01T10:00:00Z"));
+    expect(at.toISOString()).toBe("2026-07-02T04:30:00.000Z");
+    const w = nextRunAt({ cadence: "weekly", weekday: 1, hour: 9, minute: 0 }, new Date("2026-12-02T10:00:00Z"));
+    expect(w.toISOString()).toBe("2026-12-07T09:00:00.000Z");
+  });
+});
