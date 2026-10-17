@@ -438,6 +438,7 @@ export interface Approval {
   title: string;
   summary: string;
   agent: string;
+  task_id: string | null;
   status: "pending" | "approved" | "rejected";
   created_at: string;
   decided_at: string | null;

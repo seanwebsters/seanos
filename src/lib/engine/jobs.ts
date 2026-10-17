@@ -14,7 +14,7 @@ export interface RunContext {
   progress(p: number): Promise<void>;
   deliver(d: Deliverable): void;
   cite(sources: Source[]): void;
-  needsApproval(a: Omit<Approval, "id" | "status" | "created_at" | "decided_at">): Promise<void>;
+  needsApproval(a: Omit<Approval, "id" | "status" | "created_at" | "decided_at" | "task_id">): Promise<void>;
 }
 
 export interface WorkflowResult { summary: string; awaitingApproval?: boolean }
@@ -170,7 +170,7 @@ export async function runTask(taskId: string): Promise<Task> {
         for (const s of sources) if (!citations.some((c) => c.url === s.url)) citations.push(s);
       },
       async needsApproval(a) {
-        const row: Approval = { ...a, id: newId("apr"), status: "pending", created_at: nowIso(), decided_at: null };
+        const row: Approval = { ...a, id: newId("apr"), task_id: taskId, status: "pending", created_at: nowIso(), decided_at: null };
         await db.insert("approvals", row);
       },
     };
