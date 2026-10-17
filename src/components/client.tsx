@@ -222,7 +222,7 @@ export function AskButton({ context, label = "Ask", suggestions, className = "bt
 export function AskBar() {
   const { open } = useAsk();
   return (
-    <button onClick={() => open()} className="glass flex w-full items-center gap-3 rounded-full px-4 py-3 text-left text-[15px] text-muted shadow-xl ring-1 ring-line">
+    <button onClick={() => open()} className="glass flex w-full items-center gap-3 whitespace-nowrap rounded-full px-4 py-3 text-left text-[15px] text-muted shadow-xl ring-1 ring-line">
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[#141413]"><Icon name="sparkle" size={15} /></span>
       Ask SEAN OS…
       <span className="ml-auto hidden rounded-md bg-raised px-1.5 py-0.5 text-[11px] lg:inline">⌘K</span>
