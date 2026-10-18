@@ -5,7 +5,7 @@ import { body, HttpError, json, route } from "@/lib/api";
 import { createTask, getWorkflow, runTask } from "@/lib/engine";
 import type { AgentKey } from "@/lib/ai/agents";
 
-const INTERNAL = new Set(["wardrobe_tag"]);
+const INTERNAL = new Set(["wardrobe_tag", "copilot"]);
 
 export const POST = route(async (req: Request) => {
   const b = await body<{ instruction?: string; kind?: string; params?: Record<string, unknown>; context_ref?: Ref | null; title?: string }>(req);

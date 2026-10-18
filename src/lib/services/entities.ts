@@ -51,6 +51,16 @@ export const ENTITIES: Partial<Record<TableName, Spec>> = {
   ambitions: { patch: ["statement", "horizon", "why", "status"], touch: "updated_at" },
   strategy_items: { patch: ["title", "description", "due", "instruction", "owner_agent"], remove: true, touch: "updated_at" },
   insights: { patch: ["status"] },
+  ventures: {
+    patch: ["name", "tagline", "category", "stage", "thesis", "customer", "market", "competition", "business_model", "validation", "product", "roadmap", "ownership", "ip_notes", "licensing", "confidentiality", "incorporated", "priority", "tags"], touch: "updated_at",
+    create: (i) => ({ id: newId("ven"), name: str(i.name, "New venture"), tagline: str(i.tagline), category: str(i.category), stage: "concept", status: "draft", thesis: "", customer: "", market: "", competition: "", business_model: "", validation: "", product: "", roadmap: "", ownership: "unclear", ip_notes: "", licensing: "", confidentiality: "personal", conflicts: [], incorporated: false, priority: 20, health: null, idea_id: null, merged_into: null, tags: [], is_demo: false, created_at: nowIso(), updated_at: nowIso() }),
+  },
+  venture_docs: { patch: ["title", "body", "checklist", "status"], remove: true, touch: "updated_at" },
+  venture_tasks: {
+    patch: ["title", "detail", "phase", "owner", "due", "status"], remove: true, touch: "updated_at",
+    create: (i) => ({ id: newId("vt"), venture_id: str(i.venture_id), title: str(i.title, "Task"), detail: str(i.detail), phase: ["30", "60", "90", "later"].includes(str(i.phase)) ? i.phase : "30", owner: str(i.owner, "sean"), due: str(i.due) || null, status: "todo", engine_task_id: null, created_at: nowIso(), updated_at: nowIso() }),
+  },
+  investor_pipeline: { patch: ["next_step", "follow_up_at", "notes"], touch: "updated_at" },
   transactions: {
     patch: ["date", "description", "amount", "category", "notes", "account_id"], remove: true,
     create: (i) => {

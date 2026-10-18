@@ -48,6 +48,26 @@ A private, mobile-first AI organisation for one person. A team of nineteen speci
   * Every view is labelled "model of estimates, not a prediction". One tap sends a scenario to the council.
 * **Trust & autonomy**: five autonomy levels (default 2, Prepare), an emergency stop that halts the queue and the scheduler, an audit trail of every consequential change, and graph export and erase.
 
+## Founder OS: your AI cofounder
+
+`/founder` (Workspaces → Founder OS) is the business side of building. See [`docs/FOUNDER_OS.md`](docs/FOUNDER_OS.md).
+
+* **A portfolio of your 16 proposed ventures**: Webster, SleepStories, VoysNote, Moonwilders and others.
+  * They're seeded as concepts with ownership "unclear". Possible Calm conflicts are flagged.
+  * You can merge, archive, rename and reclassify them.
+* **Build the business** (one tap, or from a raw idea): the team runs the whole pipeline. Every result is saved and editable:
+  * Strategist: strategy and market research.
+  * CFO: a driver-based 36-month model with downside/base/upside cases and funding requirements.
+  * Fundraising: a route recommendation, round sizing, readiness checklist, data room, memo, deck and FAQ.
+  * Investor Research: a shortlist of investors, each with a verified source.
+  * Operations: a 30/60/90-day plan.
+  * Legal: an IP and compliance checklist, with ⚖ marking items that need a professional.
+  * Chief of Staff: a health score and the three next actions.
+* **Financial models are formula-driven and auditable**: every driver is labelled verified, estimate or yours. Every save is a version you can restore, and models export to CSV. GBP and USD use a dated ECB rate. Revenue, valuation and personal wealth are kept apart.
+* **The round simulator** covers option-pool shuffle, dilution, price per share and "what does selling 15% mean?". **The investor CRM** tracks stage history. A warm intro shows only when you record one. Outreach is drafts only.
+* **The Copilot** is a cofounder you can talk to. It takes only whitelisted internal actions: add a task, change a model driver, start agent work, record a decision or set a stage. It never sends, spends or signs anything.
+* **Scheduled work**: a daily founder briefing and a weekly venture review that flags stalled ventures, follow-ups and costs above plan.
+
 ## Principles built into the code
 
 * **No fabrication.** Agents must cite URLs that actually appeared in their web-search results for that task. `SourceVerifier` drops anything else: stories, people, trends, events, contacts and competitor links. Deadlines must come from official pages. Estimates are labelled illustrative unless a verified source is attached.
@@ -86,7 +106,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
-2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql` and `0004_council_future.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql`, `0004_council_future.sql` and `0005_founder_os.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 3. Set `OWNER_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY` and `CRON_SECRET`.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 
@@ -101,6 +121,9 @@ Vercel works, but it's serverless:
 | Calendar | Settings → private iCal address | Read-only meetings, briefings and meeting prep |
 | Weather | none (Open-Meteo) | Outfit and briefing context |
 | Voyage AI | `VOYAGE_API_KEY` (`VOYAGE_MODEL`, default `voyage-3.5-lite`) | Optional semantic search in the world model (BM25 works without it) |
+| Exchange rates | none (Frankfurter / ECB) | Dated GBP↔USD rate for Founder OS models |
+| Companies House | `COMPANIES_HOUSE_API_KEY`, or add it in a venture's Risks & legal tab (stored encrypted) | Live UK company-name checks |
+| Credential vault | `CREDENTIALS_KEY` (optional; otherwise derived from `SESSION_SECRET`) | AES-256-GCM encryption for keys you add in the app |
 | Gmail / Contacts | not built yet | Needs a Google OAuth app (`GOOGLE_CLIENT_ID`/`SECRET`). For now, reconnection suggestions use your CRM and calendar |
 
 ## Cost

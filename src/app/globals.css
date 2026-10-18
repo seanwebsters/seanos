@@ -115,3 +115,12 @@ body {
 :root { --fe-1: #2a78d6; --fe-2: #eb6834; --fe-3: #1baf7a; --fe-4: #eda100; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fe-1: #3987e5; --fe-2: #d95926; --fe-3: #199e70; --fe-4: #c98500; } }
 :root[data-theme="dark"] { --fe-1: #3987e5; --fe-2: #d95926; --fe-3: #199e70; --fe-4: #c98500; }
+
+/* Founder OS: dashboards that need the full width on desktop. */
+@media (min-width: 1024px) { .page-shell:has(> .wide) { max-width: 1480px; } }
+.fo-hero {
+  background:
+    radial-gradient(60% 80% at 78% 30%, rgb(255 190 120 / 0.55), transparent 60%),
+    radial-gradient(70% 90% at 20% 0%, rgb(120 96 170 / 0.55), transparent 65%),
+    linear-gradient(180deg, #2a2440 0%, #5a3f5c 45%, #c07a5a 85%, #e8a874 100%);
+}

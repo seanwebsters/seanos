@@ -29,9 +29,10 @@ async function counts() {
   try {
     await ensureBootstrapped();
     const db = getDb();
-    return { approvals: await db.count("approvals", { status: "pending" }), unread: await db.count("notifications", { read: false }) };
+    const ventures = (await db.list("ventures")).filter((v) => v.stage !== "archived" && !v.merged_into).sort((a, b) => b.priority - a.priority || a.created_at.localeCompare(b.created_at)).map((v) => ({ id: v.id, name: v.name }));
+    return { approvals: await db.count("approvals", { status: "pending" }), unread: await db.count("notifications", { read: false }), ventures };
   } catch {
-    return { approvals: 0, unread: 0 };
+    return { approvals: 0, unread: 0, ventures: [] };
   }
 }
 
@@ -43,9 +44,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen font-sans">
         <Providers>
           <OnlineBadge />
-          <Sidebar badge={c.approvals} unread={c.unread} />
+          <Sidebar badge={c.approvals} unread={c.unread} ventures={c.ventures} />
           <main className="pb-tabbar lg:pl-64">
-            <div className="mx-auto max-w-[720px] lg:max-w-[1040px] lg:px-10">{children}</div>
+            <div className="page-shell mx-auto max-w-[720px] lg:max-w-[1040px] lg:px-10">{children}</div>
           </main>
           <TabBar badge={c.approvals} />
         </Providers>

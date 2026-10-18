@@ -94,6 +94,8 @@ export const DEFAULT_AUTOMATIONS: AutoSeed[] = [
   { workflow: "strategy_review", name: "Strategic review", description: "Progress, blockers, new information, what to stop, and the single highest-leverage action for each active ambition.", cadence: "weekly", weekday: 1, hour: 6, minute: 30, est_cost_cents: 25 },
   { workflow: "graph_extract", name: "World model update", description: "Reads new stories, reports, people and notes into your knowledge graph.", cadence: "daily", weekday: null, hour: 3, minute: 40, est_cost_cents: 5 },
   { workflow: "missing", name: "What am I missing?", description: "A weekly scan of your world for blind spots, risks and overlooked opportunities.", cadence: "weekly", weekday: 3, hour: 6, minute: 45, est_cost_cents: 20 },
+  { workflow: "founder_briefing", name: "AI Cofounder briefing", description: "What needs your attention across your ventures, and the three highest-value actions for today.", cadence: "daily", weekday: null, hour: 6, minute: 10, est_cost_cents: 8 },
+  { workflow: "venture_review", name: "Weekly venture review", description: "Stalled projects, budget variance, investor follow-ups, deadlines and new opportunities across your ventures.", cadence: "weekly", weekday: 1, hour: 7, minute: 0, est_cost_cents: 20 },
   { workflow: "weekly_review", name: "Weekly review", description: "Projects, goals and what to focus on next week.", cadence: "weekly", weekday: 0, hour: 17, minute: 0, est_cost_cents: 20 },
 ];
 
@@ -125,6 +127,12 @@ export function ensureBootstrapped(): Promise<void> {
     if (!(await db.get("profile", "me"))) await db.insert("profile", defaultProfile());
     if (!(await db.get("settings", "app"))) await db.insert("settings", defaultSettings());
     if ((await db.count("memories")) === 0) for (const mem of seedMemories()) await db.insert("memories", mem);
+    const st = (await db.get("settings", "app"))!;
+    if (!st.founder_seeded) {
+      const { seedVentures } = await import("@/lib/founder/seed");
+      await seedVentures();
+      await db.update("settings", "app", { founder_seeded: true });
+    }
     const existing = await db.list("automations");
     for (const a of DEFAULT_AUTOMATIONS) {
       if (existing.some((e) => e.workflow === a.workflow)) continue;

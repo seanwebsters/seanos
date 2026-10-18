@@ -36,6 +36,7 @@ async function subjectContext(ref: RunContext["task"]["context_ref"]): Promise<{
       case "report": { const r = await db.get("reports", ref.id); return r && { text: `Report: ${r.title}\n${r.summary}\n${r.body.slice(0, 4000)}`, scope: r.scope }; }
       case "opportunity": { const o = await db.get("opportunities", ref.id); return o && { text: `Opportunity: ${o.title}\n${o.thesis}\nItems: ${o.items.map((i) => `${i.type}: ${i.title} (${i.role})`).join("; ")}`, scope: "personal" as Scope }; }
       case "experience": { const e = await db.get("experiences", ref.id); return e && { text: `London: ${e.title} at ${e.venue}, ${e.dates}. ${e.description}`, scope: "personal" as Scope }; }
+      case "venture": { const v = await db.get("ventures", ref.id); return v && { text: `Venture (a proposed concept unless stated): ${v.name}: ${v.tagline}\nStage: ${v.stage}. Ownership: ${v.ownership}.\nThesis: ${v.thesis}\nCustomer: ${v.customer}\nModel: ${v.business_model}\nValidation so far: ${v.validation || "none recorded"}`, scope: (v.ownership === "calm" ? "work" : "personal") as Scope }; }
       case "task": { const t = await db.get("tasks", ref.id); return t && { text: `Earlier task: ${t.title}\nResult: ${t.summary ?? ""}`, scope: "personal" as Scope }; }
       default: return null;
     }
@@ -208,6 +209,8 @@ const CAPABILITIES: Record<string, { workflow?: string; describe: string }> = {
   outfit: { workflow: "outfit", describe: "Suggest today's outfit" },
   council: { workflow: "council", describe: "Put an important decision to the Intelligence Council: seven independent critiques and a recommendation" },
   scenario: { workflow: "scenario", describe: "Model possible futures for a 'what if' question: conservative, base, optimistic and alternative scenarios with a cash-flow model" },
+  portfolio: { workflow: "commercial_analysis", describe: "Founder OS: rank Sean's ventures on traction, feasibility, cost, market, distribution and fit (Commercial Analyst)" },
+  founder_briefing: { workflow: "founder_briefing", describe: "Founder OS: AI cofounder briefing across all ventures" },
   finance: { workflow: "finance_plan", describe: "Budgets, spending review, savings plans and money questions, using Sean's real finance data (Financial Planner)" },
 };
 

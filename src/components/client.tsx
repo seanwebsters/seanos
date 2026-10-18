@@ -241,6 +241,7 @@ const TABS = [
 ];
 
 const MORE = [
+  { href: "/founder", label: "Founder OS", icon: "rocket" },
   { href: "/infinity", label: "SEAN ∞", icon: "sparkle" },
   { href: "/opportunities", label: "Opportunities", icon: "target" },
   { href: "/trends", label: "Trends", icon: "trend" },
@@ -290,7 +291,7 @@ export function TabBar({ badge }: { badge: number }) {
   );
 }
 
-export function Sidebar({ badge, unread }: { badge: number; unread: number }) {
+export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unread: number; ventures?: { id: string; name: string }[] }) {
   const path = usePathname();
   if (path.startsWith("/sign-in") || path.includes("/deck")) return null;
   const item = (t: { href: string; label: string; icon: string }, count?: number) => (
@@ -308,6 +309,17 @@ export function Sidebar({ badge, unread }: { badge: number; unread: number }) {
       <div className="mb-4"><AskBar /></div>
       <nav className="no-scrollbar flex-1 space-y-0.5 overflow-y-auto">
         {TABS.map((t) => item(t, t.href === "/agents" ? badge : undefined))}
+        {path.startsWith("/founder") && (
+          <>
+            <div className="flex items-center justify-between px-3 pb-1 pt-5"><span className="eyebrow">Ventures</span><Link href="/founder/new" aria-label="New venture" className="text-muted hover:text-ink"><Icon name="plus" size={16} /></Link></div>
+            {ventures.map((v) => (
+              <Link key={v.id} href={`/founder/v/${v.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-1.5 text-[13.5px] transition ${path.startsWith(`/founder/v/${v.id}`) ? "bg-raised font-medium text-ink" : "text-muted hover:text-ink"}`}>
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-raised text-[10px] font-semibold text-ink">{v.name.slice(0, 1)}</span>
+                <span className="truncate">{v.name}</span>
+              </Link>
+            ))}
+          </>
+        )}
         <div className="eyebrow px-3 pb-1 pt-5">Workspaces</div>
         {MORE.map((t) => item(t, t.href === "/approvals" ? badge : undefined))}
       </nav>

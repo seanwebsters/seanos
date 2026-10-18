@@ -203,3 +203,38 @@ describe("future engine model", () => {
     expect(s.find((x) => x.key === "hours_per_week")!.swing).toBe(0);
   });
 });
+
+import { runModel, emptyDrivers } from "@/lib/founder/finmodel";
+import { simulateRound, sellPercent } from "@/lib/founder/captable";
+
+describe("founder finance engine", () => {
+  const base = () => {
+    const drivers = emptyDrivers().map((d) => ({ ...d, value: ({ launch_month: 2, sub_price: 10, sub_start: 100, sub_organic_new: 50, sub_churn: 5, payment_fees_pct: 10, ai_cost_per_user: 1, cac: 20, marketing_budget: 200 } as Record<string, number>)[d.key] ?? d.value }));
+    return { currency: "GBP" as const, fx: { gbp_usd: 1.3, as_of: "2026-10-01", source: "test" }, start: "2026-11", months: 12, starting_cash: 5000, streams: { subscription: true }, drivers, opex: [{ name: "Tools", monthly: 300, start_month: 1, growth_pct: 0 }], team: [{ role: "Contractor", monthly_cost: 1000, start_month: 3 }], funding: [], scenarios: { upside: { sub_organic_new: 100 }, downside: { sub_churn: 12 } }, actuals: [], startup_costs: [{ item: "Brand", amount: 1500, basis: "estimate" as const }] };
+  };
+  it("computes revenue, unit economics and funding need with stated formulas", () => {
+    const o = runModel(base());
+    expect(o.months[0].revenue_total).toBe(0);
+    expect(o.months[1].subscribers).toBe(100);
+    expect(o.months[2].subscribers).toBeCloseTo(100 * 0.95 + 50 + 10, 6);
+    expect(o.months[1].revenue.subscription).toBe(1000);
+    expect(o.months[1].cogs).toBeCloseTo(100 + 100, 6);
+    expect(o.months[0].ebitda).toBe(-300 - 1500);
+    expect(o.kpis.ltv).toBeCloseTo((10 * 0.9 - 1) / 0.05, 6);
+    expect(o.kpis.ltv_cac).toBeCloseTo(160 / 20, 6);
+    expect(o.kpis.payback_months).toBeCloseTo(20 / 8, 6);
+    const up = runModel(base(), "upside"), down = runModel(base(), "downside");
+    expect(up.kpis.revenue_y1).toBeGreaterThan(o.kpis.revenue_y1);
+    expect(down.kpis.revenue_y1).toBeLessThan(o.kpis.revenue_y1);
+  });
+  it("models dilution with an option-pool shuffle", () => {
+    const r = simulateRound([{ name: "Sean", kind: "founder", shares: 1_000_000 }], 1_700_000, 300_000, 10);
+    expect(r.post_money).toBe(2_000_000);
+    expect(r.investor_pct).toBeCloseTo(0.15, 9);
+    const sean = r.holders.find((h) => h.name === "Sean")!;
+    expect(sean.after_pct).toBeCloseTo(0.75, 6);
+    expect(r.holders.find((h) => h.kind === "pool")!.after_pct).toBeCloseTo(0.1, 6);
+    expect(r.price_per_share * r.new_investor_shares).toBeCloseTo(300_000, 3);
+    expect(sellPercent(15, 300_000)).toEqual({ post_money: 2_000_000, pre_money: 1_700_000, investor_pct: 0.15 });
+  });
+});

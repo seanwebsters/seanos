@@ -58,6 +58,7 @@ export interface Settings {
   autonomy_level: 1 | 2 | 3 | 4 | 5;
   /** Emergency stop: no task runs and no automation fires while true. */
   halted: boolean;
+  founder_seeded?: boolean;
   updated_at: string;
 }
 
@@ -790,6 +791,176 @@ export interface Scenario {
   updated_at: string;
 }
 
+/* ---------------------------- Founder OS ---------------------------- */
+
+export type Basis = "verified" | "estimate" | "forecast" | "scenario" | "user";
+
+export interface Venture {
+  id: string;
+  name: string;
+  tagline: string;
+  category: string;
+  stage: "concept" | "researching" | "validating" | "building" | "launched" | "paused" | "archived";
+  status: "draft" | "researching" | "awaiting_approval" | "running" | "completed" | "failed";
+  thesis: string;
+  customer: string;
+  market: string;
+  competition: string;
+  business_model: string;
+  validation: string;
+  product: string;
+  roadmap: string;
+  ownership: "independent" | "calm" | "joint" | "unclear";
+  ip_notes: string;
+  licensing: string;
+  confidentiality: Scope;
+  conflicts: string[];
+  incorporated: boolean;
+  priority: number;
+  health: { score: number; reasons: string[] } | null;
+  idea_id: string | null;
+  merged_into: string | null;
+  tags: string[];
+  is_demo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VentureDoc {
+  id: string;
+  venture_id: string;
+  kind: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown>;
+  checklist: { item: string; status: "todo" | "doing" | "done" | "na"; note: string; due: string | null }[];
+  slides: { title: string; bullets: string[]; notes?: string }[];
+  sources: Source[];
+  basis: Basis;
+  status: "draft" | "awaiting_approval" | "final";
+  version: number;
+  agent: string;
+  task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VentureTask {
+  id: string;
+  venture_id: string;
+  title: string;
+  detail: string;
+  phase: "30" | "60" | "90" | "later";
+  owner: string;
+  due: string | null;
+  status: "todo" | "doing" | "done" | "blocked";
+  engine_task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Driver { key: string; label: string; value: number; unit: string; basis: Basis; note: string; source_url: string | null }
+export interface FinModel {
+  id: string;
+  venture_id: string;
+  version: number;
+  currency: "GBP" | "USD";
+  fx: { gbp_usd: number; as_of: string; source: string };
+  start: string;
+  months: number;
+  starting_cash: number;
+  streams: Record<string, boolean>;
+  drivers: Driver[];
+  opex: { name: string; monthly: number; start_month: number; growth_pct: number }[];
+  team: { role: string; monthly_cost: number; start_month: number }[];
+  funding: { month: number; amount: number; kind: "equity" | "grant" | "loan" | "revenue_based" | "founder"; note: string }[];
+  scenarios: { upside: Record<string, number>; downside: Record<string, number> };
+  actuals: { month: string; revenue: number; costs: number; cash: number }[];
+  startup_costs: { item: string; amount: number; basis: Basis }[];
+  change_note: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinModelVersion {
+  id: string;
+  model_id: string;
+  venture_id: string;
+  version: number;
+  snapshot: Omit<FinModel, "id">;
+  change_note: string;
+  changed: string[];
+  by: string;
+  at: string;
+}
+
+export interface CapTable {
+  id: string;
+  venture_id: string;
+  holders: { name: string; kind: "founder" | "investor" | "pool" | "other"; shares: number }[];
+  rounds: { name: string; pre_money: number; amount: number; pool_top_up_pct: number; status: "modelled" | "closed"; date: string | null }[];
+  currency: "GBP" | "USD";
+  basis: Basis;
+  updated_at: string;
+}
+
+export interface Investor {
+  id: string;
+  name: string;
+  kind: "angel" | "vc" | "accelerator" | "grant" | "strategic" | "syndicate" | "other";
+  firm: string;
+  geography: string[];
+  stages: string[];
+  sectors: string[];
+  cheque: { min: number | null; max: number | null; currency: string; stated: boolean };
+  thesis: string;
+  notable: { name: string; url: string | null }[];
+  website: string | null;
+  apply_url: string | null;
+  sources: Source[];
+  last_verified: string;
+  dedupe_key: string;
+  created_at: string;
+}
+
+export interface PipelineEntry {
+  id: string;
+  venture_id: string;
+  investor_id: string;
+  stage: "researching" | "shortlisted" | "contacted" | "meeting" | "diligence" | "term_sheet" | "committed" | "passed";
+  fit_score: number;
+  fit_reasons: string[];
+  warm_intro: { via: string; note: string } | null;
+  next_step: string;
+  follow_up_at: string | null;
+  notes: string;
+  history: { at: string; stage: string; note: string }[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CopilotMessage {
+  id: string;
+  thread: string;
+  role: "sean" | "cofounder";
+  text: string;
+  actions: { type: string; label: string; ref: string | null; ok: boolean }[];
+  task_id: string | null;
+  status: "pending" | "done" | "failed";
+  created_at: string;
+}
+
+export interface CredentialRow {
+  id: string;
+  provider: string;
+  ciphertext: string;
+  iv: string;
+  tag: string;
+  hint: string;
+  updated_at: string;
+}
+
 export interface AuditEntry {
   id: string;
   at: string;
@@ -873,6 +1044,16 @@ export interface Tables {
   audit_log: AuditEntry;
   decisions: Decision;
   scenarios: Scenario;
+  ventures: Venture;
+  venture_docs: VentureDoc;
+  venture_tasks: VentureTask;
+  fin_models: FinModel;
+  fin_model_versions: FinModelVersion;
+  cap_tables: CapTable;
+  investors: Investor;
+  investor_pipeline: PipelineEntry;
+  copilot_messages: CopilotMessage;
+  credentials: CredentialRow;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
   files: FileRow;
@@ -885,6 +1066,7 @@ export const TABLE_NAMES: TableName[] = [
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
   "transactions", "accounts", "budgets", "recurring", "finance_goals",
   "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log", "decisions", "scenarios",
+  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "credentials",
   "notifications", "push_subscriptions", "files",
 ];
 
