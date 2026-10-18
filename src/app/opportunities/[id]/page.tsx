@@ -8,7 +8,7 @@ import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
-const HREF: Record<string, string> = { trend: "/trends", idea: "/ideas", person: "/people", speaking: "/speaking", partnership: "/calmlings" };
+const HREF: Record<string, string> = { trend: "/trends", idea: "/ideas", person: "/people", speaking: "/speaking", partnership: "/calmlings", node: "/infinity/node" };
 
 export default async function OpportunityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

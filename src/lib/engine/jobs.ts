@@ -5,6 +5,7 @@ import { newId, nowIso } from "@/lib/util";
 import { BlockedError, RetryableError } from "@/lib/ai/errors";
 import type { AgentKey } from "@/lib/ai/agents";
 import { notify } from "@/lib/services/notify";
+import { getSettings } from "@/lib/bootstrap";
 
 export interface RunContext {
   task: Task;
@@ -94,6 +95,7 @@ const running = new Set<string>();
 /** Claim and run due tasks. Safe to call from the heartbeat, cron and API. */
 export async function tick(): Promise<number> {
   const db = getDb();
+  if ((await getSettings()).halted) return 0;
   const now = new Date();
   const due = (await db.list("tasks", { where: { status: ["queued", "running"] }, orderBy: { column: "scheduled_for", ascending: true } })).filter(
     (t) => !running.has(t.id) && t.scheduled_for <= now.toISOString() && (!t.lease_until || t.lease_until < now.toISOString()),
@@ -142,6 +144,7 @@ export async function runTask(taskId: string): Promise<Task> {
         if (prev?.status === "done") return prev.output as never;
         const fresh = await db.get("tasks", taskId);
         if (fresh && (fresh.status === "cancelled" || fresh.status === "paused")) throw new StopSignal(fresh.status);
+        if ((await getSettings()).halted) throw new StopSignal("paused");
         const stepId = prev?.id ?? newId("step");
         const base: TaskStep = { id: stepId, task_id: taskId, idx: myIdx, agent, title, status: "running", output: null, cost_cents: 0, started_at: nowIso(), finished_at: null, error: null };
         await db.upsert("task_steps", base);

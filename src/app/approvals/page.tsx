@@ -20,8 +20,8 @@ export default async function Approvals() {
       {items.length ? (
         <div className="mx-5 mt-3 space-y-3 lg:mx-0">
           {items.map(({ a, draft, out }) => {
-            const body = draft?.body ?? out?.body ?? "";
-            const href = draft ? `/studio/${draft.id}` : out ? (out.target_type === "partnership" ? `/calmlings/${out.target_id}` : out.target_type === "speaking" ? `/speaking/${out.target_id}` : `/people/${out.target_id}`) : "#";
+            const body = draft?.body ?? out?.body ?? (a.type === "strategy" ? a.summary : "");
+            const href = a.type === "strategy" ? `/infinity/strategy/${a.ref_id}` : draft ? `/studio/${draft.id}` : out ? (out.target_type === "partnership" ? `/calmlings/${out.target_id}` : out.target_type === "speaking" ? `/speaking/${out.target_id}` : `/people/${out.target_id}`) : "#";
             return (
               <div key={a.id} id={a.id} className="card overflow-hidden">
                 <div className="flex items-center gap-3 border-b border-line px-4 py-3">

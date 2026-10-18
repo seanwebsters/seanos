@@ -48,6 +48,9 @@ export const ENTITIES: Partial<Record<TableName, Spec>> = {
     create: (i) => ({ id: newId("life"), kind: str(i.kind, "workout"), title: str(i.title), amount: typeof i.amount === "number" ? i.amount : null, target: typeof i.target === "number" ? i.target : null, progress: typeof i.progress === "number" ? i.progress : null, date: str(i.date) || londonDate(), notes: str(i.notes), done: false, created_at: nowIso() }),
   },
   notifications: { patch: ["read"], remove: true },
+  ambitions: { patch: ["statement", "horizon", "why", "status"], touch: "updated_at" },
+  strategy_items: { patch: ["title", "description", "due", "instruction", "owner_agent"], remove: true, touch: "updated_at" },
+  insights: { patch: ["status"] },
   transactions: {
     patch: ["date", "description", "amount", "category", "notes", "account_id"], remove: true,
     create: (i) => {

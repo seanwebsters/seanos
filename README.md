@@ -1,6 +1,6 @@
 # SEAN OS
 
-A private, mobile-first AI organisation for one person. A team of sixteen specialist agents researches, writes, plans and prepares work around the clock, and presents everything for approval. It's an installable PWA with a desktop layout.
+A private, mobile-first AI organisation for one person. A team of seventeen specialist agents researches, writes, plans and prepares work around the clock, and presents everything for approval. It's an installable PWA with a desktop layout.
 
 **What it does**
 
@@ -17,6 +17,26 @@ A private, mobile-first AI organisation for one person. A team of sixteen specia
 * **Agents**: an activity centre derived entirely from real task, step and approval rows. Each agent's instructions, model and on/off switch are editable.
 * **Memory**: facts vs inferences, with provenance, confidence and scope (personal / work / public). You can edit, delete and export it. Feedback buttons across the app ("too corporate", "more like this", "don't recommend again") feed back into it.
 * **Automations**: real scheduled jobs (morning run, weekly scans, Friday report). Everything is behind an **Autopilot** switch, which is off by default because it spends API credit, and capped by daily and monthly budgets.
+
+## SEAN ∞: the personal intelligence layer
+
+∞ Mode (the **∞** button on Home, or `/infinity`) sits on top of everything above. See [`docs/SEAN_INFINITY_PLAN.md`](docs/SEAN_INFINITY_PLAN.md) for the full eight-phase plan. Built so far:
+
+* **Personal world model**: a persistent knowledge graph of you, your goals, people, companies, projects, ideas, trends, technologies and events.
+  * Every SEAN OS record is mirrored into it for free, with no model calls.
+  * The World Model Curator extracts entities and relationships from your edition, reports, people, notes and memories. A relationship is only kept when the source contains a verbatim quote supporting it.
+  * Every fact carries provenance, confidence and dates. Contradictions (say, two current employers) are flagged for you to settle.
+  * You can correct anything: edit, merge, verify, mark as past, mark as wrong, forget, or change privacy scope.
+  * Search is BM25, plus Voyage embeddings if `VOYAGE_API_KEY` is set. There's an interactive graph explorer.
+  * **Ask your world** answers "What connections am I missing?", "Which of my ideas overlap?", "Who in my network could help with this?" and "What has changed since last month?", citing the entities it used.
+* **Convergence detection**: finds the company or technology where your threads meet. For example, a founder who worked with someone you know, a company exhibiting at an event that's taking speakers, and a tool relevant to Calmlings. One tap turns it into a coordinated opportunity.
+* **Strategy engine**: give it an ambition ("here's where I want to be in five years").
+  * The strategist researches and decomposes it: strategies → objectives (with metrics that can track real counters automatically) → initiatives → projects → actions.
+  * A sceptic pass challenges its assumptions. Nothing starts until you approve.
+  * Progress rolls up from metrics, sub-items and linked tasks.
+  * A weekly strategic review asks what progress you've made, what's blocking you, what's changed, what to stop, and the single highest-leverage action.
+* **What am I missing?**: builds an evidence pack from your graph, strategy, work patterns, deadlines, stale approvals and opportunities. Findings must cite that evidence, uncited ones are dropped, and "nothing important enough" is a valid result. Each finding comes with one action you can delegate. It also produces the **Next Best Move**.
+* **Trust & autonomy**: five autonomy levels (default 2, Prepare), an emergency stop that halts the queue and the scheduler, an audit trail of every consequential change, and graph export and erase.
 
 ## Principles built into the code
 
@@ -56,7 +76,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
-2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql` and `0003_infinity.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 3. Set `OWNER_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY` and `CRON_SECRET`.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 
@@ -70,6 +90,7 @@ Vercel works, but it's serverless:
 | Web Push | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Notifications on your phone (on iPhone, add to Home Screen first) |
 | Calendar | Settings → private iCal address | Read-only meetings, briefings and meeting prep |
 | Weather | none (Open-Meteo) | Outfit and briefing context |
+| Voyage AI | `VOYAGE_API_KEY` (`VOYAGE_MODEL`, default `voyage-3.5-lite`) | Optional semantic search in the world model (BM25 works without it) |
 | Gmail / Contacts | not built yet | Needs a Google OAuth app (`GOOGLE_CLIENT_ID`/`SECRET`). For now, reconnection suggestions use your CRM and calendar |
 
 ## Cost

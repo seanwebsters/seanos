@@ -54,6 +54,10 @@ export interface Settings {
   fast_model: string;
   timezone: string;
   onboarded: boolean;
+  /** SEAN ∞ autonomy: 1 observe · 2 prepare · 3 execute internally · 4 external with approval · 5 pre-authorised. */
+  autonomy_level: 1 | 2 | 3 | 4 | 5;
+  /** Emergency stop: no task runs and no automation fires while true. */
+  halted: boolean;
   updated_at: string;
 }
 
@@ -433,7 +437,7 @@ export interface Outreach {
 
 export interface Approval {
   id: string;
-  type: "draft" | "outreach" | "task";
+  type: "draft" | "outreach" | "task" | "strategy";
   ref_id: string;
   title: string;
   summary: string;
@@ -572,6 +576,164 @@ export interface FinanceGoal {
   created_at: string;
 }
 
+/* ----------------------------- SEAN ∞ ----------------------------- */
+
+export type NodeType =
+  | "self" | "person" | "company" | "organisation" | "project" | "idea" | "trend" | "technology" | "market"
+  | "event" | "goal" | "document" | "decision" | "skill" | "product" | "place" | "topic";
+
+/** Where a node or edge came from. */
+export interface Provenance {
+  kind: "user" | "record" | "extraction" | "url";
+  ref: string | null;
+  url: string | null;
+  quote: string | null;
+  at: string;
+}
+
+export interface GraphNode {
+  id: string;
+  type: NodeType;
+  name: string;
+  aliases: string[];
+  summary: string;
+  attributes: Record<string, string>;
+  scope: Scope;
+  confidence: number;
+  sources: Provenance[];
+  record_ref: Ref | null;
+  dedupe_key: string;
+  status: "active" | "hidden" | "merged";
+  merged_into: string | null;
+  verified: boolean;
+  embedding: number[] | null;
+  embedded_hash: string | null;
+  first_seen: string;
+  last_seen: string;
+  updated_at: string;
+}
+
+export interface GraphEdge {
+  id: string;
+  from: string;
+  to: string;
+  type: string;
+  label: string;
+  confidence: number;
+  sources: Provenance[];
+  scope: Scope;
+  valid_from: string | null;
+  valid_to: string | null;
+  status: "active" | "retracted";
+  first_seen: string;
+  last_seen: string;
+}
+
+export interface GraphConflict {
+  id: string;
+  kind: "functional" | "attribute";
+  node_id: string;
+  edge_ids: string[];
+  attribute: string | null;
+  description: string;
+  options: string[];
+  status: "open" | "resolved" | "dismissed";
+  resolution: string | null;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+export interface GraphIngest {
+  /** Source key, e.g. "story:st_123". */
+  id: string;
+  hash: string;
+  extracted_at: string;
+  entities: number;
+  relations: number;
+}
+
+export interface Ambition {
+  id: string;
+  statement: string;
+  horizon: string;
+  why: string;
+  success: string[];
+  assumptions: string[];
+  risks: string[];
+  status: "drafting" | "proposed" | "active" | "paused" | "achieved" | "dropped";
+  task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Metric {
+  name: string;
+  target: number;
+  current: number;
+  unit: string;
+  /** "manual" or a built-in counter key. */
+  source: string;
+}
+
+export interface StrategyItem {
+  id: string;
+  ambition_id: string;
+  parent_id: string | null;
+  level: "strategy" | "objective" | "initiative" | "project" | "action";
+  title: string;
+  description: string;
+  rationale: string;
+  metrics: Metric[];
+  status: "proposed" | "approved" | "active" | "paused" | "done" | "dropped";
+  owner_agent: string;
+  instruction: string | null;
+  task_ids: string[];
+  evidence: string[];
+  due: string | null;
+  position: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StrategyReview {
+  id: string;
+  ambition_id: string;
+  date: string;
+  progress: string;
+  blockers: string[];
+  new_information: string[];
+  stop_doing: string[];
+  highest_leverage: { title: string; why: string; instruction: string } | null;
+  adjustments: string[];
+  task_id: string | null;
+  created_at: string;
+}
+
+export interface Insight {
+  id: string;
+  run_id: string;
+  kind: string;
+  title: string;
+  insight: string;
+  recommendation: { label: string; instruction: string } | null;
+  evidence: { id: string; label: string; href: string | null }[];
+  impact: number;
+  confidence: number;
+  status: "new" | "acted" | "dismissed";
+  next_best_move: boolean;
+  task_id: string | null;
+  created_at: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  at: string;
+  actor: string;
+  action: string;
+  target: string;
+  detail: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
@@ -635,6 +797,15 @@ export interface Tables {
   budgets: Budget;
   recurring: Recurring;
   finance_goals: FinanceGoal;
+  graph_nodes: GraphNode;
+  graph_edges: GraphEdge;
+  graph_conflicts: GraphConflict;
+  graph_ingest: GraphIngest;
+  ambitions: Ambition;
+  strategy_items: StrategyItem;
+  strategy_reviews: StrategyReview;
+  insights: Insight;
+  audit_log: AuditEntry;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
   files: FileRow;
@@ -645,7 +816,9 @@ export const TABLE_NAMES: TableName[] = [
   "profile", "settings", "memories", "agent_overrides", "tasks", "task_steps", "task_logs", "usage", "automations",
   "editions", "stories", "briefings", "drafts", "people", "interactions", "partnerships", "ideas", "reports", "trends",
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
-  "transactions", "accounts", "budgets", "recurring", "finance_goals", "notifications", "push_subscriptions", "files",
+  "transactions", "accounts", "budgets", "recurring", "finance_goals",
+  "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log",
+  "notifications", "push_subscriptions", "files",
 ];
 
 export type Where<T> = { [K in keyof T]?: T[K] | T[K][] | null };

@@ -71,6 +71,8 @@ function defaultSettings(): Settings {
     fast_model: "claude-haiku-5-5",
     timezone: "Europe/London",
     onboarded: false,
+    autonomy_level: 2,
+    halted: false,
     updated_at: nowIso(),
   };
 }
@@ -89,6 +91,9 @@ export const DEFAULT_AUTOMATIONS: AutoSeed[] = [
   { workflow: "opportunity_engine", name: "Opportunity engine", description: "Connects trends, ideas, people, events and partnerships into actionable opportunities.", cadence: "weekly", weekday: 4, hour: 5, minute: 0, est_cost_cents: 40 },
   { workflow: "opportunity_report", name: "Friday opportunity report", description: "The strongest discoveries of the week.", cadence: "weekly", weekday: 5, hour: 6, minute: 30, est_cost_cents: 30 },
   { workflow: "finance_review", name: "Money check-in", description: "Spending vs budget, upcoming bills, subscriptions and progress on savings goals.", cadence: "weekly", weekday: 0, hour: 9, minute: 30, est_cost_cents: 15 },
+  { workflow: "strategy_review", name: "Strategic review", description: "Progress, blockers, new information, what to stop, and the single highest-leverage action for each active ambition.", cadence: "weekly", weekday: 1, hour: 6, minute: 30, est_cost_cents: 25 },
+  { workflow: "graph_extract", name: "World model update", description: "Reads new stories, reports, people and notes into your knowledge graph.", cadence: "daily", weekday: null, hour: 3, minute: 40, est_cost_cents: 5 },
+  { workflow: "missing", name: "What am I missing?", description: "A weekly scan of your world for blind spots, risks and overlooked opportunities.", cadence: "weekly", weekday: 3, hour: 6, minute: 45, est_cost_cents: 20 },
   { workflow: "weekly_review", name: "Weekly review", description: "Projects, goals and what to focus on next week.", cadence: "weekly", weekday: 0, hour: 17, minute: 0, est_cost_cents: 20 },
 ];
 
@@ -136,7 +141,9 @@ export function ensureBootstrapped(): Promise<void> {
 
 export async function getSettings(): Promise<Settings> {
   await ensureBootstrapped();
-  return (await getDb().get("settings", "app")) as Settings;
+  const s = (await getDb().get("settings", "app")) as Settings;
+  // Settings saved before SEAN ∞ lack these fields.
+  return { ...s, autonomy_level: s.autonomy_level ?? 2, halted: s.halted ?? false };
 }
 
 export async function getProfile(): Promise<Profile> {

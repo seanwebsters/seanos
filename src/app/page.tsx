@@ -49,6 +49,7 @@ export default async function Home() {
             <div className="text-[13px] font-medium opacity-90">{fmtDate(d.today, { weekday: "long", day: "numeric", month: "long" })}</div>
             <div className="flex items-center gap-2">
               {d.weather && <span className="rounded-full bg-black/25 px-3 py-1 text-[13px] backdrop-blur">{d.weather.temp_c}° {d.weather.summary}</span>}
+              <Link href="/infinity" aria-label="SEAN ∞ mode" className="flex h-9 items-center rounded-full bg-black/25 px-3 text-[17px] font-semibold backdrop-blur">∞</Link>
               <Link href="/notifications" aria-label="Notifications" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 backdrop-blur"><Icon name="bell" size={18} /></Link>
             </div>
           </div>

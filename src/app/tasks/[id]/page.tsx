@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const HREF: Record<string, (id: string) => string> = {
   edition: () => "/edition", briefing: () => "/", draft: (id) => `/studio/${id}`, person: (id) => `/people/${id}`, partnership: (id) => `/calmlings/${id}`, idea: (id) => `/ideas/${id}`,
   report: (id) => `/reports/${id}`, trend: (id) => `/trends/${id}`, speaking: (id) => `/speaking/${id}`, opportunity: (id) => `/opportunities/${id}`, outfit: () => "/wardrobe",
-  wardrobe: () => "/wardrobe", experience: (id) => `/life/experience/${id}`,
+  wardrobe: () => "/wardrobe", experience: (id) => `/life/experience/${id}`, ambition: (id) => `/infinity/strategy/${id}`, node: (id) => `/infinity/node/${id}`,
 };
 
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {

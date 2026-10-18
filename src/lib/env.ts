@@ -28,6 +28,9 @@ export const env = {
   supabaseServiceRoleKey: opt("SUPABASE_SERVICE_ROLE_KEY"),
   supabaseBucket: opt("SUPABASE_STORAGE_BUCKET") ?? "sean-os",
   falKey: opt("FAL_KEY"),
+  /** Optional semantic search for the world model (Voyage AI embeddings). */
+  voyageApiKey: opt("VOYAGE_API_KEY"),
+  voyageModel: opt("VOYAGE_MODEL") ?? "voyage-3.5-lite",
   falImageModel: opt("FAL_IMAGE_MODEL") ?? "fal-ai/nano-banana",
   vapidPublicKey: opt("VAPID_PUBLIC_KEY"),
   vapidPrivateKey: opt("VAPID_PRIVATE_KEY"),

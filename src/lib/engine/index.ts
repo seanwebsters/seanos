@@ -6,13 +6,14 @@ import { nowIso } from "@/lib/util";
 import { createTask, tick } from "./jobs";
 import { nextRunAt } from "./schedule";
 import { rollRecurring } from "./workflows/finance";
+import { syncGraph } from "@/lib/graph/workflows";
 
 export { createTask, tick, controlTask, runTask, getWorkflow } from "./jobs";
 
 /** Queues due automations. They only run when Autopilot is on. */
 export async function runAutomations(now = new Date()): Promise<number> {
   const settings = await getSettings();
-  if (!settings.autopilot) return 0;
+  if (!settings.autopilot || settings.halted) return 0;
   const db = getDb();
   let queued = 0;
   for (const a of await db.list("automations", { where: { enabled: true } })) {
@@ -40,6 +41,7 @@ export async function runAutomations(now = new Date()): Promise<number> {
 /** One heartbeat: schedule, then work. */
 export async function heartbeat() {
   await rollRecurring().catch(() => {});
+  await syncGraph().catch((e) => console.error(JSON.stringify({ level: "warn", scope: "graph", message: String(e) })));
   await runAutomations();
   await tick();
 }

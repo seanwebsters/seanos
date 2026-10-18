@@ -241,6 +241,7 @@ const TABS = [
 ];
 
 const MORE = [
+  { href: "/infinity", label: "SEAN ∞", icon: "sparkle" },
   { href: "/opportunities", label: "Opportunities", icon: "target" },
   { href: "/trends", label: "Trends", icon: "trend" },
   { href: "/ideas", label: "Ideas", icon: "bulb" },

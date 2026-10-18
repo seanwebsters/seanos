@@ -7,5 +7,7 @@ import "./opportunities";
 import "./life";
 import "./general";
 import "./finance";
+import "@/lib/graph/workflows";
+import "@/lib/strategy/workflows";
 
 export { IDEA_ACTIONS } from "./general";
