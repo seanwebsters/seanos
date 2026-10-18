@@ -183,3 +183,23 @@ describe("finance", () => {
     expect(advance("2026-01-31", "monthly")).toBe("2026-03-03");
   });
 });
+
+import { simulate, sensitivity, defaultRanges, normalise } from "@/lib/future/model";
+
+describe("future engine model", () => {
+  it("simulates cash flow, break-even and sensitivity", () => {
+    const a = { months: 12, launch_month: 2, upfront_cost: 2000, monthly_cost: 500, hours_per_week: 10, price: 20, start_customers: 10, new_customers_per_month: 20, acquisition_growth: 0, churn_rate: 0, other_monthly_income: 0, opportunity_cost_per_month: 100 };
+    const o = simulate(a);
+    expect(o.rows).toHaveLength(12);
+    expect(o.rows[0].cumulative).toBe(-2500);
+    expect(o.rows[1].customers).toBe(10);
+    expect(o.rows[2].customers).toBe(30);
+    expect(o.mrr_end).toBe((10 + 20 * 10) * 20);
+    expect(o.break_even_month).not.toBeNull();
+    expect(o.net_after_opportunity).toBe(o.cumulative_net - 1200);
+    const s = sensitivity(a, defaultRanges(normalise(a)));
+    expect(s[0].swing).toBeGreaterThanOrEqual(s[1].swing);
+    expect(["price", "new_customers_per_month", "launch_month"]).toContain(s[0].key);
+    expect(s.find((x) => x.key === "hours_per_week")!.swing).toBe(0);
+  });
+});

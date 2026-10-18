@@ -725,6 +725,71 @@ export interface Insight {
   created_at: string;
 }
 
+export type Lens = "visionary" | "investor" | "operator" | "creative" | "researcher" | "sceptic" | "strategist";
+
+export interface CouncilView {
+  lens: Lens;
+  stance: "support" | "oppose" | "conditional";
+  score: number;
+  summary: string;
+  points: string[];
+  risks: string[];
+  assumptions: string[];
+  questions: string[];
+  preferred_option: string | null;
+}
+
+export interface Decision {
+  id: string;
+  question: string;
+  context: string;
+  options: string[];
+  status: "deliberating" | "ready" | "decided" | "archived";
+  evidence: { claim: string; source_url: string | null; kind: "sourced" | "graph" | "record" }[];
+  unknowns: { question: string; finding: string }[];
+  views: CouncilView[];
+  disagreements: { topic: string; positions: string[] }[];
+  tradeoffs: string[];
+  recommendation: { option: string; confidence: number; rationale: string } | null;
+  would_change: string[];
+  next_steps: { label: string; instruction: string }[];
+  scenario_id: string | null;
+  decided_option: string | null;
+  decision_note: string;
+  context_ref: Ref | null;
+  task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScenarioAssumption {
+  key: string;
+  value: number;
+  basis: "estimate" | "sourced" | "user";
+  note: string;
+  source_url: string | null;
+  low: number;
+  high: number;
+}
+
+export interface Scenario {
+  id: string;
+  question: string;
+  summary: string;
+  model_fit: string;
+  assumptions: ScenarioAssumption[];
+  paths: { name: "conservative" | "base" | "optimistic" | "alternative"; title: string; narrative: string; overrides: Record<string, number>; milestones: string[]; risks: string[]; dependencies: string[] }[];
+  qualitative: { dimension: string; conservative: number; base: number; optimistic: number; alternative: number; note: string }[];
+  capabilities: string[];
+  market: string;
+  sources: Source[];
+  decision_id: string | null;
+  status: "modelling" | "ready" | "failed";
+  task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuditEntry {
   id: string;
   at: string;
@@ -806,6 +871,8 @@ export interface Tables {
   strategy_reviews: StrategyReview;
   insights: Insight;
   audit_log: AuditEntry;
+  decisions: Decision;
+  scenarios: Scenario;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
   files: FileRow;
@@ -817,7 +884,7 @@ export const TABLE_NAMES: TableName[] = [
   "editions", "stories", "briefings", "drafts", "people", "interactions", "partnerships", "ideas", "reports", "trends",
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
   "transactions", "accounts", "budgets", "recurring", "finance_goals",
-  "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log",
+  "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log", "decisions", "scenarios",
   "notifications", "push_subscriptions", "files",
 ];
 

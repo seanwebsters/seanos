@@ -110,3 +110,8 @@ body {
 :root { --wg-people: #2a78d6; --wg-orgs: #eb6834; --wg-yours: #1baf7a; --wg-other: rgb(var(--faint)); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --wg-people: #3987e5; --wg-orgs: #d95926; --wg-yours: #199e70; } }
 :root[data-theme="dark"] { --wg-people: #3987e5; --wg-orgs: #d95926; --wg-yours: #199e70; }
+
+/* Future Engine: 4 validated categorical slots (adjacent), fixed order. */
+:root { --fe-1: #2a78d6; --fe-2: #eb6834; --fe-3: #1baf7a; --fe-4: #eda100; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fe-1: #3987e5; --fe-2: #d95926; --fe-3: #199e70; --fe-4: #c98500; } }
+:root[data-theme="dark"] { --fe-1: #3987e5; --fe-2: #d95926; --fe-3: #199e70; --fe-4: #c98500; }

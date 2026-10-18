@@ -5,7 +5,7 @@ import { syncGraph } from "@/lib/graph/workflows";
 import { changesSince, convergences, describePath, loadWorld, missingLinks } from "@/lib/graph/query";
 import { progressOf } from "@/lib/strategy/core";
 
-const INFINITY_KINDS = ["missing", "graph_ask", "graph_extract", "ambition_plan", "strategy_review"];
+const INFINITY_KINDS = ["missing", "graph_ask", "graph_extract", "ambition_plan", "strategy_review", "council", "scenario"];
 
 export async function commandCentre() {
   await syncGraph();
@@ -33,5 +33,7 @@ export async function commandCentre() {
   const links = missingLinks(w, 3);
   const month = await changesSince(new Date(Date.now() - 30 * 86400000).toISOString());
   const conflicts = await db.list("graph_conflicts", { where: { status: "open" }, orderBy: { column: "created_at", ascending: false } });
-  return { settings, counts: { nodes: w.nodes.size, edges: w.edges.length }, nbm, lastMissing, findings, running, answers, missions, conv, links, month, conflicts };
+  const decisions = (await db.list("decisions", { orderBy: { column: "updated_at", ascending: false } })).filter((d) => d.status !== "archived").slice(0, 4);
+  const scenarios = (await db.list("scenarios", { orderBy: { column: "updated_at", ascending: false } })).slice(0, 4);
+  return { decisions, scenarios, settings, counts: { nodes: w.nodes.size, edges: w.edges.length }, nbm, lastMissing, findings, running, answers, missions, conv, links, month, conflicts };
 }

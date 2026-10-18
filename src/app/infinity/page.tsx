@@ -131,6 +131,27 @@ export default async function Infinity() {
         )}
       </Section>
 
+      {/* FUTURE PATHS */}
+      <Section title="Future paths" href="/infinity/future">
+        {d.scenarios.length ? (
+          <div className="mx-5 space-y-2 lg:mx-0">
+            {d.scenarios.map((s) => <Link key={s.id} href={`/infinity/future/${s.id}`} className="card flex items-center gap-3 p-4"><Icon name="clock" size={18} className="shrink-0 text-accent" /><span className="min-w-0 flex-1"><span className="block truncate font-serif text-[16px] font-medium">{s.question}</span><span className="block text-[12px] text-muted">{s.status === "ready" ? `${s.paths.length} paths modelled` : s.status}</span></span><Icon name="chevron" size={16} className="text-faint" /></Link>)}
+          </div>
+        ) : null}
+        <div className="mx-5 mt-2 flex flex-wrap gap-2 lg:mx-0">
+          {["What if I start my own AI creative studio?", "What happens if I spend six months building VoysNote?"].map((q) => <Delegate key={q} label={q} kind="scenario" instruction={q} />)}
+        </div>
+      </Section>
+
+      {/* COUNCIL */}
+      <Section title="Intelligence Council" href="/infinity/council">
+        {d.decisions.length ? (
+          <div className="mx-5 space-y-2 lg:mx-0">
+            {d.decisions.map((x) => <Link key={x.id} href={`/infinity/council/${x.id}`} className="card block p-4"><div className="text-[11px] font-semibold uppercase tracking-wider text-muted">{x.status === "ready" ? "Ready for your decision" : x.status}</div><div className="mt-1 font-serif text-[16px] font-medium leading-snug">{x.question}</div>{x.recommendation && <div className="mt-1 text-[12.5px] text-muted">Recommends {x.recommendation.option} · {Math.round(x.recommendation.confidence * 100)}%</div>}</Link>)}
+          </div>
+        ) : <Empty icon="people" title="Nothing before the council" body="Put an important decision to seven independent lenses and get one evidence-weighted recommendation."><Link href="/infinity/council" className="btn-primary">Bring a decision</Link></Empty>}
+      </Section>
+
       {/* NEW CONNECTIONS */}
       <Section title="New connections" href="/infinity/world">
         {d.conv.length || d.links.length ? (
@@ -161,12 +182,12 @@ export default async function Infinity() {
         </Section>
       )}
 
-      <div className="mx-5 mt-10 grid grid-cols-2 gap-2.5 lg:mx-0 lg:grid-cols-4">
-        {[["/infinity/world", "grid", "Explore the graph"], ["/infinity/strategy", "target", "Strategy"], ["/infinity/changes", "clock", "What changed"], ["/infinity/trust", "lock", "Trust & autonomy"]].map(([href, icon, label]) => (
+      <div className="mx-5 mt-10 grid grid-cols-2 gap-2.5 lg:mx-0 lg:grid-cols-3">
+        {[["/infinity/world", "grid", "Explore the graph"], ["/infinity/strategy", "target", "Strategy"], ["/infinity/future", "clock", "Future Engine"], ["/infinity/council", "people", "Council"], ["/infinity/changes", "refresh", "What changed"], ["/infinity/trust", "lock", "Trust & autonomy"]].map(([href, icon, label]) => (
           <Link key={href} href={href} className="card flex flex-col gap-6 p-4"><Icon name={icon} size={20} className="text-accent" /><span className="text-[14px] font-medium">{label}</span></Link>
         ))}
       </div>
-      <p className="mx-5 mt-6 text-[12px] text-faint lg:mx-0">Coming in the next phases: Intelligence Council, Future Engine, Venture Lab and Organisation Generator. See docs/SEAN_INFINITY_PLAN.md.</p>
+      <p className="mx-5 mt-6 text-[12px] text-faint lg:mx-0">Coming in the next phases: continuous opportunity synthesis, the Venture Lab and the Organisation Generator. See docs/SEAN_INFINITY_PLAN.md.</p>
     </div>
   );
 }

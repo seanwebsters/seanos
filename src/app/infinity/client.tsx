@@ -149,3 +149,71 @@ export function AutonomyPicker({ level }: { level: number }) {
     </div>
   );
 }
+
+export function DecisionForm() {
+  const [q, setQ] = useState("");
+  const [context, setContext] = useState("");
+  const [options, setOptions] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  return (
+    <form className="space-y-2" onSubmit={async (e) => {
+      e.preventDefault();
+      setBusy(true);
+      try {
+        const { decision } = await api<{ decision: { id: string } }>("/api/infinity/decisions", { question: q, context, options: options.split("\n").map((x) => x.trim()).filter(Boolean) });
+        router.push(`/infinity/council/${decision.id}`);
+      } catch (err) { alert((err as Error).message); setBusy(false); }
+    }}>
+      <textarea value={q} onChange={(e) => setQ(e.target.value)} rows={2} placeholder="e.g. Should I spend six months building VoysNote?" className="field font-serif text-[17px]" />
+      <textarea value={context} onChange={(e) => setContext(e.target.value)} rows={2} placeholder="Context the council should know (optional)" className="field text-[14px]" />
+      <textarea value={options} onChange={(e) => setOptions(e.target.value)} rows={2} placeholder="Options, one per line (optional; the council will frame them)" className="field text-[14px]" />
+      <button disabled={busy || q.trim().length < 8} className="btn-primary w-full py-3.5">{busy ? "Convening…" : "Convene the council"}</button>
+    </form>
+  );
+}
+
+export function ScenarioForm({ examples }: { examples: string[] }) {
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const toast = useToast();
+  const go = async (text: string) => {
+    setBusy(true);
+    try {
+      const { task } = await api<{ task: { id: string } }>("/api/infinity/scenarios", { question: text });
+      toast({ text: "Modelling the futures…", href: `/tasks/${task.id}` });
+      setQ("");
+      router.refresh();
+    } catch (err) { alert((err as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <div>
+      <form onSubmit={(e) => { e.preventDefault(); go(q); }} className="relative">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What happens if I…" className="field py-4 pr-14 text-[16px]" />
+        <button disabled={busy || q.trim().length < 8} className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-ink text-bg disabled:opacity-30" aria-label="Model"><Icon name="arrow" size={18} /></button>
+      </form>
+      <div className="no-scrollbar mt-2.5 flex gap-2 overflow-x-auto">{examples.map((e) => <button key={e} disabled={busy} onClick={() => go(e)} className="chip shrink-0">{e}</button>)}</div>
+    </div>
+  );
+}
+
+export function DecideForm({ id, options, recommended }: { id: string; options: string[]; recommended: string | null }) {
+  const [choice, setChoice] = useState(recommended ?? options[0] ?? "");
+  const [note, setNote] = useState("");
+  const router = useRouter();
+  const toast = useToast();
+  return (
+    <div className="space-y-2">
+      {options.map((o) => (
+        <label key={o} className={`flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-[14.5px] ring-1 ${choice === o ? "bg-accent/10 ring-accent" : "bg-raised ring-transparent"}`}>
+          <input type="radio" checked={choice === o} onChange={() => setChoice(o)} className="accent-[rgb(var(--accent))]" />
+          <span className="flex-1">{o}</span>{o === recommended && <span className="text-[11px] font-semibold text-accent">Council's pick</span>}
+        </label>
+      ))}
+      <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={choice !== recommended ? "Why? (helps your strategic twin learn)" : "Any reasoning to remember (optional)"} className="field" />
+      <button disabled={!choice} className="btn-primary" onClick={async () => { await api(`/api/infinity/decisions/${id}`, { action: "decide", option: choice, note }); toast({ text: "Decision recorded" }); router.refresh(); }}>Record my decision</button>
+      <p className="text-[12px] text-muted">Your decision is yours. Recording it teaches SEAN ∞ how you weigh things; it doesn't trigger any action.</p>
+    </div>
+  );
+}

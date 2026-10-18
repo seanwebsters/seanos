@@ -1,6 +1,6 @@
 # SEAN OS
 
-A private, mobile-first AI organisation for one person. A team of seventeen specialist agents researches, writes, plans and prepares work around the clock, and presents everything for approval. It's an installable PWA with a desktop layout.
+A private, mobile-first AI organisation for one person. A team of nineteen specialist agents researches, writes, plans and prepares work around the clock, and presents everything for approval. It's an installable PWA with a desktop layout.
 
 **What it does**
 
@@ -36,6 +36,16 @@ A private, mobile-first AI organisation for one person. A team of seventeen spec
   * Progress rolls up from metrics, sub-items and linked tasks.
   * A weekly strategic review asks what progress you've made, what's blocking you, what's changed, what to stop, and the single highest-leverage action.
 * **What am I missing?**: builds an evidence pack from your graph, strategy, work patterns, deadlines, stale approvals and opportunities. Findings must cite that evidence, uncited ones are dropped, and "nothing important enough" is a valid result. Each finding comes with one action you can delegate. It also produces the **Next Best Move**.
+* **Intelligence Council**: put an important decision to it.
+  * It first researches the three unknowns that matter most, with sources checked.
+  * Seven lenses then critique the decision independently, without seeing each other's views: Visionary, Investor, Operator, Creative Director, Researcher, Sceptic and Personal Strategist.
+  * A synthesis names the disagreements and trade-offs, gives a recommendation with a confidence level, and says exactly what evidence would change it.
+  * When you record your decision, especially one that differs from the council's, it becomes memory, so your strategic twin learns how you weigh things.
+* **Future Engine**: ask a "what if" and get conservative, base, optimistic and alternative paths.
+  * The numbers come from a transparent monthly cash-flow and time model, never from the model guessing totals.
+  * Every input is marked as sourced (with a checked URL), an estimate, or your own value.
+  * You can drag any assumption and every path recomputes live. A sensitivity ranking shows which assumptions matter most, and non-financial outcomes are scored separately as labelled judgements.
+  * Every view is labelled "model of estimates, not a prediction". One tap sends a scenario to the council.
 * **Trust & autonomy**: five autonomy levels (default 2, Prepare), an emergency stop that halts the queue and the scheduler, an audit trail of every consequential change, and graph export and erase.
 
 ## Principles built into the code
@@ -76,7 +86,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
-2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql` and `0003_infinity.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql` and `0004_council_future.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 3. Set `OWNER_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY` and `CRON_SECRET`.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 
