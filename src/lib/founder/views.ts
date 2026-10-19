@@ -5,7 +5,7 @@ import { addDays, londonDate } from "@/lib/time";
 import { STREAMS, runModel, type StreamKey } from "./finmodel";
 import { portfolioSignals } from "./core";
 
-export const FOUNDER_KINDS = ["venture_build", "cfo_model", "investor_research", "fundraising_plan", "founder_briefing", "venture_review", "commercial_analysis", "copilot"];
+export const FOUNDER_KINDS = ["venture_build", "cfo_model", "investor_research", "fundraising_plan", "founder_briefing", "venture_review", "commercial_analysis", "copilot", "growth_plan", "growth_review"];
 
 export const STAGE_GROUPS: Record<string, { label: string; stages: Venture["stage"][] }> = {
   all: { label: "All", stages: ["concept", "researching", "validating", "building", "launched", "paused"] },

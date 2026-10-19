@@ -20,6 +20,8 @@ export const COPILOT_WORKFLOWS = {
   cfo_model: "Rebuild or adjust the financial model",
   investor_research: "Find verified investors for this venture",
   fundraising_plan: "Refresh the fundraising plan, readiness and data room",
+  growth_plan: "Plan how to get users and revenue: channels, launch plan, experiments for approval",
+  growth_review: "Score running growth experiments against recorded numbers",
   commercial_analysis: "Rank the whole portfolio",
   council: "Put a decision to the Intelligence Council",
   scenario: "Model a what-if scenario",
@@ -72,7 +74,7 @@ export async function executeCopilotAction(a: CopilotAction, threadVenture: Vent
     case "run_workflow": {
       const wf = a.workflow;
       if (!wf) return fail("No workflow chosen");
-      const needsVenture = ["venture_build", "cfo_model", "investor_research", "fundraising_plan"].includes(wf);
+      const needsVenture = ["venture_build", "cfo_model", "investor_research", "fundraising_plan", "growth_plan", "growth_review"].includes(wf);
       if (needsVenture && !v) return fail("Which venture? Nothing started");
       const task = await createTask({
         title: `${v && needsVenture ? `${v.name}: ` : ""}${COPILOT_WORKFLOWS[wf].split(" (")[0]}`,

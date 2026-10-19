@@ -13,5 +13,6 @@ import "@/lib/council/workflows";
 import "@/lib/future/workflows";
 import "@/lib/founder/workflows";
 import "@/lib/founder/copilot";
+import "@/lib/founder/growth";
 
 export { IDEA_ACTIONS } from "./general";

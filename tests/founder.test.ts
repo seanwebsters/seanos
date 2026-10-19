@@ -174,3 +174,66 @@ describe("agent office", () => {
     expect(by.legal.state).toBe("idle");
   });
 });
+
+describe("growth engine", () => {
+  it("gates paid experiments behind a cap, starts only on approval, and scores from real numbers", async () => {
+    const { db } = await setup((r, text) => team(r.agent, text));
+    const { POST: growth } = await import("@/app/api/founder/growth/[ventureId]/route");
+    const { POST: approve } = await import("@/app/api/approvals/[id]/route");
+    const band = (await db.list("ventures")).find((v) => v.name === "BandApp")!;
+    const go = (b: unknown) => growth(req(b), params({ ventureId: band.id }));
+
+    // No cap: the paid experiment isn't even proposed.
+    let t = (await (await go({ action: "plan" })).json()).task;
+    let done = await runTask(t.id);
+    expect(done.status).toBe("awaiting_approval");
+    let exps = await db.list("experiments", { where: { venture_id: band.id } });
+    expect(exps.map((e) => e.budget)).toEqual([0]);
+    expect((await db.list("venture_docs", { where: { venture_id: band.id, kind: "growth_plan" } }))[0].body).toContain("Store listing (draft)");
+
+    // With a £100 cap both are proposed; the earlier proposal is replaced.
+    expect((await go({ action: "cap", cap: 100 })).status).toBe(200);
+    t = (await (await go({ action: "plan" })).json()).task;
+    await runTask(t.id);
+    exps = (await db.list("experiments", { where: { venture_id: band.id } })).filter((e) => e.status === "proposed");
+    expect(exps.map((e) => e.budget).sort()).toEqual([0, 80]);
+    const paid = exps.find((e) => e.budget === 80)!, free = exps.find((e) => e.budget === 0)!;
+
+    // Lower the cap below the budget: approval is refused and nothing starts.
+    await go({ action: "cap", cap: 50 });
+    const refused = await approve(req({ decision: "approved" }), params({ id: paid.approval_id! }));
+    expect(refused.status).toBe(409);
+    expect((await db.get("experiments", paid.id))!.status).toBe("proposed");
+    expect((await db.get("approvals", paid.approval_id!))!.status).toBe("pending");
+    await go({ action: "cap", cap: 100 });
+    expect((await approve(req({ decision: "approved" }), params({ id: paid.approval_id! }))).status).toBe(200);
+    expect((await approve(req({ decision: "approved" }), params({ id: free.approval_id! }))).status).toBe(200);
+    const running = (await db.get("experiments", paid.id))!;
+    expect(running.status).toBe("running");
+
+    // Real numbers, by hand and by CSV; then the window closes and a review scores it.
+    const day = running.started_at!;
+    await go({ action: "metric", date: day, metric: "installs", value: 70 });
+    const csv = await (await go({ action: "csv", csv: `date,installs,spend\n${day},90,40\nnot-a-date,1,1` })).json();
+    expect(csv).toMatchObject({ added: 1, updated: 1, skipped: 1 });
+    await go({ action: "spend", id: paid.id, value: 78 });
+    await db.update("experiments", paid.id, { ends_at: "2000-01-01", started_at: "1999-12-25" });
+    await db.update("experiments", free.id, { ends_at: "2000-01-01", started_at: "1999-12-25" });
+    await db.update("experiments", paid.id, { started_at: day, ends_at: day });
+    const rv = (await (await go({ action: "review" })).json()).task;
+    await runTask(rv.id);
+    const scored = (await db.get("experiments", paid.id))!;
+    expect(scored.result).toMatchObject({ value: 90, verdict: "inconclusive" });
+    expect((await db.get("experiments", free.id))!.result!.verdict).toBe("no_data");
+    expect(scored.spent).toBe(78);
+    // Nothing was published or sent.
+    expect(await db.count("outreach")).toBe(0);
+  });
+
+  it("parses long and wide metric CSVs", async () => {
+    const { parseMetricsCsv } = await import("@/lib/founder/growth-core");
+    expect(parseMetricsCsv('Date,Metric,Value\n01/10/2026,Revenue,"£1,234"\n2026-10-02,installs,5').rows).toEqual([{ date: "2026-10-01", metric: "revenue", value: 1234 }, { date: "2026-10-02", metric: "installs", value: 5 }]);
+    expect(parseMetricsCsv("date,metric,value\n2026-10-01,revenue,12.5").rows).toEqual([{ date: "2026-10-01", metric: "revenue", value: 12.5 }]);
+    expect(parseMetricsCsv("date,installs,sign ups,revenue\n02/10/2026,4,,9").rows).toEqual([{ date: "2026-10-02", metric: "installs", value: 4 }, { date: "2026-10-02", metric: "revenue", value: 9 }]);
+  });
+});

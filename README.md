@@ -66,6 +66,10 @@ A private, mobile-first AI organisation for one person. A team of nineteen speci
 * **Financial models are formula-driven and auditable**: every driver is labelled verified, estimate or yours. Every save is a version you can restore, and models export to CSV. GBP and USD use a dated ECB rate. Revenue, valuation and personal wealth are kept apart.
 * **The round simulator** covers option-pool shuffle, dilution, price per share and "what does selling 15% mean?". **The investor CRM** tracks stage history. A warm intro shows only when you record one. Outreach is drafts only.
 * **The Copilot** is a cofounder you can talk to. It takes only whitelisted internal actions: add a task, change a model driver, start agent work, record a decision or set a stage. It never sends, spends or signs anything.
+* **Growth: push an app**: record real installs, sign-ups and revenue, or import a CSV.
+  * The Growth Lead writes a launch plan and cheap experiments, with the posts, ads and store listing already drafted.
+  * Each experiment starts only when you approve it, under a monthly spend cap you set.
+  * Results are scored from your numbers, never by the model.
 * **The office**: a 3D black office of your agents at their desks, driven by real task state, so nobody is shown working unless a task is actually running. Tap anyone to see or assign their work.
 * **Scheduled work**: a daily founder briefing and a weekly venture review that flags stalled ventures, follow-ups and costs above plan.
 
@@ -107,7 +111,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
-2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql`, `0004_council_future.sql` and `0005_founder_os.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql`, `0004_council_future.sql`, `0005_founder_os.sql` and `0006_growth.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 3. Set `OWNER_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY` and `CRON_SECRET`.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 

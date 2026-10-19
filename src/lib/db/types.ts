@@ -438,7 +438,7 @@ export interface Outreach {
 
 export interface Approval {
   id: string;
-  type: "draft" | "outreach" | "task" | "strategy";
+  type: "draft" | "outreach" | "task" | "strategy" | "experiment";
   ref_id: string;
   title: string;
   summary: string;
@@ -822,6 +822,8 @@ export interface Venture {
   merged_into: string | null;
   tags: string[];
   is_demo: boolean;
+  /** Monthly cap on growth-experiment spend, in GBP. Nothing paid can be approved until it's set. */
+  growth_cap?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -951,6 +953,44 @@ export interface CopilotMessage {
   created_at: string;
 }
 
+export type GrowthMetricKey = "installs" | "signups" | "active_users" | "paid_users" | "revenue" | "spend" | "impressions" | "clicks" | "waitlist";
+/** Real numbers only: entered by Sean, imported from a file, or pulled from a connected provider. */
+export interface GrowthMetric {
+  id: string;
+  venture_id: string;
+  date: string;
+  metric: GrowthMetricKey;
+  value: number;
+  source: "manual" | "csv" | "provider";
+  note: string;
+  created_at: string;
+}
+
+export interface Experiment {
+  id: string;
+  venture_id: string;
+  title: string;
+  hypothesis: string;
+  channel: string;
+  steps: string[];
+  assets: { kind: string; title: string; body: string }[];
+  budget: number;
+  metric: GrowthMetricKey;
+  baseline: number | null;
+  target: number;
+  duration_days: number;
+  status: "proposed" | "running" | "done" | "rejected" | "killed";
+  started_at: string | null;
+  ends_at: string | null;
+  spent: number;
+  result: { value: number | null; verdict: "win" | "loss" | "inconclusive" | "no_data"; note: string } | null;
+  approval_id: string | null;
+  agent: string;
+  task_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CredentialRow {
   id: string;
   provider: string;
@@ -1053,6 +1093,8 @@ export interface Tables {
   investors: Investor;
   investor_pipeline: PipelineEntry;
   copilot_messages: CopilotMessage;
+  growth_metrics: GrowthMetric;
+  experiments: Experiment;
   credentials: CredentialRow;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
@@ -1066,7 +1108,7 @@ export const TABLE_NAMES: TableName[] = [
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
   "transactions", "accounts", "budgets", "recurring", "finance_goals",
   "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log", "decisions", "scenarios",
-  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "credentials",
+  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "growth_metrics", "experiments", "credentials",
   "notifications", "push_subscriptions", "files",
 ];
 

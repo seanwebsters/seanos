@@ -3,18 +3,20 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import type { VentureDoc } from "@/lib/db/types";
 import { AgentBadge, Art, Markdown, Notice, PageHeader, Pill, Sources, Tabs, agentName } from "@/components/ui";
-import { ActionButton, CreateForm, EditField, LiveRefresh } from "@/components/client";
+import { ActionButton, CopyButton, CreateForm, EditField, LiveRefresh } from "@/components/client";
 import { BasisTag, Checklist, CompaniesSearch, CopilotChat, ModelEditor, PipelineControls, RoundSim, TaskCheck, VentureManage } from "@/components/founder";
 import { Icon } from "@/components/Icon";
 import { ensureCapTable, getModel } from "@/lib/founder/core";
 import { money, runModel } from "@/lib/founder/finmodel";
 import { FOUNDER_KINDS, progressOf } from "@/lib/founder/views";
-import { fmtDate, relTime } from "@/lib/time";
+import { fmtDate, londonDate, relTime } from "@/lib/time";
+import { CapEditor, MetricChart, MetricEntry, SpendLog } from "@/components/growth";
+import { METRICS, METRIC_KEYS, addDaysIso, committedThisMonth, fmt, scoreExperiment, windowValue } from "@/lib/founder/growth-core";
 
 export const dynamic = "force-dynamic";
 
 const TABS = [
-  { key: "overview", label: "Overview" }, { key: "strategy", label: "Strategy" }, { key: "finance", label: "Finance" }, { key: "funding", label: "Funding" },
+  { key: "overview", label: "Overview" }, { key: "growth", label: "Growth" }, { key: "strategy", label: "Strategy" }, { key: "finance", label: "Finance" }, { key: "funding", label: "Funding" },
   { key: "investors", label: "Investors" }, { key: "tasks", label: "Tasks" }, { key: "risks", label: "Risks & legal" }, { key: "docs", label: "Docs" }, { key: "history", label: "History" },
 ];
 
@@ -140,6 +142,7 @@ export default async function VenturePage({ params, searchParams }: { params: Pr
         </div>
       )}
 
+      {tab === "growth" && <GrowthTab id={id} docs={docs} />}
       {tab === "funding" && <FundingTab id={id} docs={docs} />}
 
       {tab === "investors" && (
@@ -272,6 +275,105 @@ async function Versions({ ventureId }: { ventureId: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+async function GrowthTab({ id, docs }: { id: string; docs: VentureDoc[] }) {
+  const db = getDb();
+  const v = (await db.get("ventures", id))!;
+  const today = londonDate();
+  const rows = await db.list("growth_metrics", { where: { venture_id: id } });
+  const exps = (await db.list("experiments", { where: { venture_id: id } })).sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const plan = docs.find((d) => d.kind === "growth_plan");
+  const review = docs.find((d) => d.kind === "growth_review");
+  const cur = [addDaysIso(today, -6), today] as const, prev = [addDaysIso(today, -13), addDaysIso(today, -7)] as const;
+  const tiles = METRIC_KEYS.filter((k) => rows.some((r) => r.metric === k)).slice(0, 6).map((k) => ({ k, now: windowValue(rows, k, ...cur), before: windowValue(rows, k, ...prev) }));
+  const spend = windowValue(rows, "spend", addDaysIso(today, -27), today), paidNew = windowValue(rows, "installs", addDaysIso(today, -27), today);
+  const groups = [
+    { title: "Waiting for your approval", list: exps.filter((e) => e.status === "proposed") },
+    { title: "Running", list: exps.filter((e) => e.status === "running") },
+    { title: "Finished", list: exps.filter((e) => ["done", "killed"].includes(e.status)) },
+  ];
+  const VERDICT: Record<string, string> = { win: "bg-sage/15 text-sage", loss: "bg-rose/15 text-rose", inconclusive: "bg-accent/15 text-accent", no_data: "bg-raised text-muted" };
+  return (
+    <div className="mt-4 space-y-5">
+      <div className="card mx-5 p-5 lg:mx-0">
+        <h3 className="display text-[24px]">Push {v.name}</h3>
+        <p className="mt-1 text-[13.5px] text-muted">The Growth Lead researches what works for products like this, then writes a two-week launch plan and 3–5 cheap experiments with ready-to-use posts, ads, store listing and pitches. Nothing starts until you approve it. You publish, and the team judges results only on the numbers you record.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <ActionButton url={`/api/founder/growth/${id}`} body={{ action: "plan" }} className="btn-primary" toastText="Growth Lead is on it"><Icon name="rocket" size={15} /> {plan ? "New growth plan" : "Plan growth"}</ActionButton>
+          {exps.some((e) => e.status === "running") && <ActionButton url={`/api/founder/growth/${id}`} body={{ action: "review" }} className="btn-ghost">Score results now</ActionButton>}
+        </div>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <CapEditor ventureId={id} cap={v.growth_cap ?? 0} committed={committedThisMonth(exps, today.slice(0, 7))} />
+        <MetricEntry ventureId={id} today={today} />
+      </div>
+      {tiles.length > 0 && (
+        <div className="mx-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:mx-0 lg:grid-cols-6">
+          {tiles.map((t) => (
+            <div key={t.k} className="card p-3.5">
+              <div className="text-[11.5px] text-muted">{METRICS[t.k].label}, 7 days</div>
+              <div className="mt-0.5 text-[20px] font-semibold tabular-nums">{t.now === null ? "–" : fmt(t.now, t.k)}</div>
+              <div className="text-[11px] text-faint">{t.before === null || t.now === null ? "no prior week" : `${t.now >= t.before ? "▲" : "▼"} vs ${fmt(t.before, t.k)} last week`}</div>
+            </div>
+          ))}
+          {spend !== null && paidNew ? <div className="card p-3.5"><div className="text-[11.5px] text-muted">Cost per install, 28 days</div><div className="mt-0.5 text-[20px] font-semibold tabular-nums">£{(spend / paidNew).toFixed(2)}</div><div className="text-[11px] text-faint">all installs, not only paid</div></div> : null}
+        </div>
+      )}
+      <MetricChart rows={rows} today={today} />
+      {groups.map((g) => g.list.length ? (
+        <div key={g.title}>
+          <div className="eyebrow mb-2 px-5 lg:px-0">{g.title}</div>
+          <div className="space-y-3">
+            {g.list.map((e) => {
+              const live = e.status === "running" ? scoreExperiment(e, rows, today) : e.result;
+              return (
+                <div key={e.id} className="card mx-5 p-4 lg:mx-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="mr-auto text-[15px] font-semibold">{e.title}</span>
+                    <span className="rounded-full bg-raised px-2 py-0.5 text-[11px]">{e.channel}</span>
+                    <span className="rounded-full bg-raised px-2 py-0.5 text-[11px]">{e.budget ? `£${e.budget}` : "free"}</span>
+                    {live && e.status !== "proposed" && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${VERDICT[live.verdict]}`}>{live.verdict === "no_data" ? "no data yet" : e.status === "running" ? `${live.verdict === "win" ? "on target" : live.verdict === "loss" ? "behind" : "close"} so far` : live.verdict}</span>}
+                    {e.status === "killed" && <span className="rounded-full bg-raised px-2 py-0.5 text-[11px] text-muted">stopped</span>}
+                  </div>
+                  <p className="mt-1 text-[13px] text-muted">{e.hypothesis}</p>
+                  <div className="mt-1 text-[12px] text-faint">Goal: {fmt(e.target, e.metric)} {METRICS[e.metric].label.toLowerCase()} in {e.duration_days} days{e.baseline !== null ? ` (recent baseline ${fmt(e.baseline, e.metric)})` : ""}{e.started_at ? ` · ${e.started_at} → ${e.ends_at}` : ""}</div>
+                  {live && e.status !== "proposed" && <div className="mt-1 text-[12.5px]">{live.note}</div>}
+                  <details className="mt-2" open={e.status === "proposed"}>
+                    <summary className="cursor-pointer text-[12.5px] font-medium">What you&apos;ll do{e.assets.length ? ` · ${e.assets.length} draft${e.assets.length > 1 ? "s" : ""} ready` : ""}</summary>
+                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-[13px]">{e.steps.map((x, i) => <li key={i}>{x}</li>)}</ol>
+                    {e.assets.map((a, i) => (
+                      <div key={i} className="mt-2 rounded-xl bg-raised p-3">
+                        <div className="flex items-center justify-between"><span className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">{a.kind} · {a.title}</span><CopyButton text={a.body} className="chip !py-1" /></div>
+                        <p className="mt-1 whitespace-pre-line text-[13px] leading-relaxed">{a.body}</p>
+                      </div>
+                    ))}
+                  </details>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {e.status === "proposed" && e.approval_id && (
+                      <>
+                        <ActionButton url={`/api/approvals/${e.approval_id}`} body={{ decision: "approved" }} className="btn-accent py-2" toastText="Started"><Icon name="check" size={14} /> {e.budget ? `Approve £${e.budget} & start` : "Approve & start"}</ActionButton>
+                        <ActionButton url={`/api/approvals/${e.approval_id}`} body={{ decision: "rejected" }} className="chip text-rose">Not this one</ActionButton>
+                      </>
+                    )}
+                    {e.status === "running" && (
+                      <>
+                        <SpendLog ventureId={id} id={e.id} spent={e.spent} />
+                        <ActionButton url={`/api/founder/growth/${id}`} body={{ action: "kill", id: e.id }} className="chip" confirm="Stop this experiment now?">Stop early</ActionButton>
+                      </>
+                    )}
+                    {e.spent > 0 && e.status !== "running" && <span className="text-[12px] text-muted">Spent £{e.spent}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null)}
+      {review && <DocCard doc={review} edit={false} />}
+      {plan && <DocCard doc={plan} />}
     </div>
   );
 }

@@ -237,7 +237,7 @@ export default async function FounderPage({ searchParams }: { searchParams: Prom
                 ))}
               </div>
             )}
-            <CopilotChat suggestions={["Which venture should I focus on this quarter?", "Build the business for Webster", "What's blocking my fundraising?"]} />
+            <CopilotChat suggestions={["Which of my apps is most likely to make money soonest?", "Plan growth for BandApp", "Which venture should I focus on this quarter?"]} />
           </section>
 
           <section className="card mx-5 p-4 lg:mx-0">

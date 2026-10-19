@@ -96,6 +96,7 @@ export const DEFAULT_AUTOMATIONS: AutoSeed[] = [
   { workflow: "missing", name: "What am I missing?", description: "A weekly scan of your world for blind spots, risks and overlooked opportunities.", cadence: "weekly", weekday: 3, hour: 6, minute: 45, est_cost_cents: 20 },
   { workflow: "founder_briefing", name: "AI Cofounder briefing", description: "What needs your attention across your ventures, and the three highest-value actions for today.", cadence: "daily", weekday: null, hour: 6, minute: 10, est_cost_cents: 8 },
   { workflow: "venture_review", name: "Weekly venture review", description: "Stalled projects, budget variance, investor follow-ups, deadlines and new opportunities across your ventures.", cadence: "weekly", weekday: 1, hour: 7, minute: 0, est_cost_cents: 20 },
+  { workflow: "growth_review", name: "Growth results", description: "Scores running growth experiments against your real numbers, closes finished ones, and proposes what to try next.", cadence: "weekly", weekday: 5, hour: 8, minute: 10, est_cost_cents: 15 },
   { workflow: "weekly_review", name: "Weekly review", description: "Projects, goals and what to focus on next week.", cadence: "weekly", weekday: 0, hour: 17, minute: 0, est_cost_cents: 20 },
 ];
 

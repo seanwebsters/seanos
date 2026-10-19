@@ -61,6 +61,21 @@ Founder OS is a new section of SEAN OS (`/founder`), not a separate app. It adds
 * `/founder/copilot`: full-screen Copilot.
 * `/founder/new`: idea to business.
 
+## Growth engine: pushing an app
+
+Each venture has a **Growth** tab.
+
+1. **Real numbers**: installs, sign-ups, waitlist, active and paying users, revenue, spend, impressions and clicks. You enter them by hand or import a CSV in long (`date,metric,value`) or wide (`date,installs,revenue,…`) format.
+2. **Growth plan** (`growth_plan`, Growth Lead with web search): positioning, first users, ranked channels, a two-week launch plan, a store listing draft, and 3–5 experiments with steps and ready-to-use posts, ads and pitches.
+3. **Spend cap**: a monthly cap per venture, starting at £0.
+   * Paid experiments that don't fit under it aren't proposed. Approval is refused if the cap has changed since.
+   * The team never spends anything: you run the ads and record what you spent.
+4. **Approval gate**: each experiment is an approval, and approving it starts it with a fixed window. You publish the drafts yourself.
+5. **Scoring is deterministic**: `scoreExperiment` sums the metric over the window, or takes the latest value for user counts, and compares it with the target. The model never decides whether something worked, and "no data" is its own verdict.
+6. **Growth results** (`growth_review`, weekly on Friday, behind Autopilot): closes finished experiments, notifies you, and writes keep, kill and scale recommendations from those verdicts.
+
+Next for growth: pull numbers straight from App Store Connect, Google Play, RevenueCat or Stripe, and post approved drafts through connected accounts. Both will only work with your authorisation, and posting stays approval-gated.
+
 ## Phases
 
 1. **Done, vertical slice**: data model, financial engine, cap table, the end-to-end Webster build, Copilot, dashboard, workspace and CRM. Tested in `tests/founder.test.ts`.

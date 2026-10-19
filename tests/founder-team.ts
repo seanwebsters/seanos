@@ -46,6 +46,18 @@ export function team(agent: string, text: string): unknown {
           { name: "Invented Ventures", kind: "vc", firm: "Invented", geography: ["US"], stages: ["seed"], sectors: ["ai"], cheque_min: 1e6, cheque_max: 2e6, cheque_currency: "USD", cheque_stated: true, thesis: "AI", notable: [], website: "https://invented.example", apply_url: "https://invented.example/apply", fit_score: 9, fit_reasons: ["?"], sources: [src("https://invented.example/about")] },
         ],
       };
+    case "growth":
+      if (text.includes("Weekly growth review")) return { title: "Creator shorts worked; paid ads didn't", body: "## What the numbers say\nInstalls rose.", next: ["Double down on creator shorts"] };
+      return {
+        positioning: "For indie bands who want superfans, BandApp turns listeners into paying members.", icp: "Unsigned UK bands with 1-10k monthly listeners, found on r/WeAreTheMusicMakers and Discord.",
+        channels: [{ channel: "Creator shorts", why: "Bands already post", effort: "low", cost: "free" }],
+        launch_plan: [{ days: "Days 1-3", actions: ["Publish store listing"] }],
+        experiments: [
+          { title: "Three band-creator shorts", hypothesis: "Short demos drive installs", channel: "TikTok", steps: ["Post 3 shorts"], budget: 0, metric: "installs", target: 100, duration_days: 14, assets: [{ kind: "post", title: "Short 1", body: "POV: your fans can finally pay you directly" }] },
+          { title: "£80 Meta install test", hypothesis: "Paid installs under £1", channel: "Meta ads", steps: ["Run the ad set"], budget: 80, metric: "installs", target: 120, duration_days: 7, assets: [{ kind: "ad", title: "Ad A", body: "Turn listeners into members." }] },
+        ],
+        aso: { title: "BandApp", subtitle: "Superfans for indie bands", keywords: "band,fans,music", description: "Draft" }, tracking: ["Installs from App Store Connect"], sources: [src(FT)],
+      };
     case "operations":
       return { tasks: [{ title: "Publish 6 test shorts", detail: "", phase: "30", owner: "sean", due_days: 21 }, { title: "Draft IP assignment", detail: "", phase: "60", owner: "legal", due_days: 45 }, { title: "Prepare angel list", detail: "", phase: "90", owner: "fundraising", due_days: 80 }], summary: "Validate, build, raise." };
     case "legal":

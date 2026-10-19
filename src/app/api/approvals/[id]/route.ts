@@ -3,6 +3,7 @@ import { body, HttpError, json, route } from "@/lib/api";
 import { nowIso, newId } from "@/lib/util";
 import { approveItem } from "@/lib/strategy/core";
 import { audit } from "@/lib/audit";
+import { decideExperiment } from "@/lib/founder/growth";
 
 /**
  * Approving never sends or publishes anything. It marks the item ready so
@@ -15,6 +16,8 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   const db = getDb();
   const a = await db.get("approvals", id);
   if (!a) throw new HttpError(404, "Approval not found");
+  // Experiments are checked against the spend cap before the approval is recorded.
+  if (a.type === "experiment") await decideExperiment(a.ref_id, decision);
   await db.update("approvals", id, { status: decision, decided_at: nowIso() });
   await audit("sean", `approval.${decision}`, `${a.type}:${a.ref_id}`, a.title);
   if (a.type === "draft") {

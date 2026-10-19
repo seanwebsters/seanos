@@ -12,16 +12,16 @@ export default async function Approvals() {
   await ensureBootstrapped();
   const db = getDb();
   const pending = await db.list("approvals", { where: { status: "pending" }, orderBy: { column: "created_at", ascending: false } });
-  const items = await Promise.all(pending.map(async (a) => ({ a, draft: a.type === "draft" ? await db.get("drafts", a.ref_id) : null, out: a.type === "outreach" ? await db.get("outreach", a.ref_id) : null })));
+  const items = await Promise.all(pending.map(async (a) => ({ a, draft: a.type === "draft" ? await db.get("drafts", a.ref_id) : null, out: a.type === "outreach" ? await db.get("outreach", a.ref_id) : null, exp: a.type === "experiment" ? await db.get("experiments", a.ref_id) : null })));
   const approvedOutreach = await db.list("outreach", { where: { status: "approved" }, orderBy: { column: "updated_at", ascending: false } });
   return (
     <div>
       <PageHeader title="Approvals" eyebrow="Waiting for you" subtitle="Approving never sends or posts anything. You stay in control of every external action." />
       {items.length ? (
         <div className="mx-5 mt-3 space-y-3 lg:mx-0">
-          {items.map(({ a, draft, out }) => {
-            const body = draft?.body ?? out?.body ?? (a.type === "strategy" ? a.summary : "");
-            const href = a.type === "strategy" ? `/infinity/strategy/${a.ref_id}` : draft ? `/studio/${draft.id}` : out ? (out.target_type === "partnership" ? `/calmlings/${out.target_id}` : out.target_type === "speaking" ? `/speaking/${out.target_id}` : `/people/${out.target_id}`) : "#";
+          {items.map(({ a, draft, out, exp }) => {
+            const body = draft?.body ?? out?.body ?? (exp ? `${a.summary}\n\n${exp.hypothesis}\n\nYou'll do:\n${exp.steps.map((x) => `• ${x}`).join("\n")}` : a.type === "strategy" ? a.summary : "");
+            const href = exp ? `/founder/v/${exp.venture_id}?tab=growth` : a.type === "strategy" ? `/infinity/strategy/${a.ref_id}` : draft ? `/studio/${draft.id}` : out ? (out.target_type === "partnership" ? `/calmlings/${out.target_id}` : out.target_type === "speaking" ? `/speaking/${out.target_id}` : `/people/${out.target_id}`) : "#";
             return (
               <div key={a.id} id={a.id} className="card overflow-hidden">
                 <div className="flex items-center gap-3 border-b border-line px-4 py-3">
@@ -34,7 +34,7 @@ export default async function Approvals() {
                   <p className="line-clamp-[10] whitespace-pre-line font-serif text-[15.5px] leading-relaxed">{body}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 border-t border-line px-4 py-3">
-                  <ActionButton url={`/api/approvals/${a.id}`} body={{ decision: "approved" }} className="btn-accent py-2" toastText="Approved"><Icon name="check" size={15} /> Approve</ActionButton>
+                  <ActionButton url={`/api/approvals/${a.id}`} body={{ decision: "approved" }} className="btn-accent py-2" toastText={exp ? "Started" : "Approved"}><Icon name="check" size={15} /> {exp ? (exp.budget ? `Approve £${exp.budget} & start` : "Approve & start") : "Approve"}</ActionButton>
                   <Link href={href} className="btn-ghost py-2"><Icon name="edit" size={15} /> Edit</Link>
                   <CopyButton text={out ? `Subject: ${out.subject}\n\n${body}` : body} className="btn-ghost py-2" />
                   <ActionButton url={`/api/approvals/${a.id}`} body={{ decision: "rejected" }} className="btn-line py-2 text-rose" toastText="Rejected">Reject</ActionButton>
