@@ -21,7 +21,7 @@ export function CopilotChat({ thread = "founder", suggestions = [], tall = false
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const end = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pending = msgs.some((m) => m.status === "pending");
   const load = async () => {
@@ -39,7 +39,8 @@ export function CopilotChat({ thread = "founder", suggestions = [], tall = false
     const t = setInterval(load, 2500);
     return () => clearInterval(t);
   }, [pending]);
-  useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [msgs.length, pending]);
+  // Scroll the conversation itself, never the page.
+  useEffect(() => { const b = box.current; if (b) b.scrollTop = b.scrollHeight; }, [msgs.length, pending]);
   const send = async (t: string) => {
     if (!t.trim() || busy) return;
     setBusy(true);
@@ -56,7 +57,7 @@ export function CopilotChat({ thread = "founder", suggestions = [], tall = false
   };
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className={`no-scrollbar flex-1 space-y-3 overflow-y-auto px-4 py-3 ${tall ? "min-h-[50vh]" : "max-h-[380px] min-h-[180px]"}`}>
+      <div ref={box} className={`no-scrollbar flex-1 space-y-3 overflow-y-auto px-4 py-3 ${tall ? "min-h-[50vh]" : "max-h-[380px] min-h-[180px]"}`}>
         {!msgs.length && (
           <div className="space-y-2 py-2">
             <p className="text-[13.5px] text-muted">Ask your cofounder anything. It can add tasks, adjust a model driver, start agent work or record a decision. It can't send, spend or sign anything.</p>
@@ -77,7 +78,6 @@ export function CopilotChat({ thread = "founder", suggestions = [], tall = false
             ))}
           </div>
         ))}
-        <div ref={end} />
       </div>
       {err && <div className="px-4 text-[12px] text-rose">{err}</div>}
       <form onSubmit={(e) => { e.preventDefault(); send(text); }} className="flex items-center gap-2 border-t border-line p-3">

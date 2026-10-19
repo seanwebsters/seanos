@@ -118,9 +118,11 @@ body {
 
 /* Founder OS: dashboards that need the full width on desktop. */
 @media (min-width: 1024px) { .page-shell:has(> .wide) { max-width: 1480px; } }
-.fo-hero {
-  background:
-    radial-gradient(60% 80% at 78% 30%, rgb(255 190 120 / 0.55), transparent 60%),
-    radial-gradient(70% 90% at 20% 0%, rgb(120 96 170 / 0.55), transparent 65%),
-    linear-gradient(180deg, #2a2440 0%, #5a3f5c 45%, #c07a5a 85%, #e8a874 100%);
+.fo-office {
+  /* Everything inside the office uses the dark tokens, whatever the page theme. */
+  --bg: 10 10 11; --surface: 21 21 23; --raised: 31 31 34; --ink: 243 239 230; --muted: 163 158 148; --faint: 107 103 95; --line: 42 42 45;
+  --accent: 217 192 143; --sage: 143 176 150; --rose: 214 140 130; --sky: 138 168 201; --glass: 16 16 18;
+  background: radial-gradient(70% 60% at 70% 20%, rgb(255 160 110 / 0.10), transparent 70%), #080808;
+  color: rgb(var(--ink));
+  color-scheme: dark;
 }

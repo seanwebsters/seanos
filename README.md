@@ -66,6 +66,7 @@ A private, mobile-first AI organisation for one person. A team of nineteen speci
 * **Financial models are formula-driven and auditable**: every driver is labelled verified, estimate or yours. Every save is a version you can restore, and models export to CSV. GBP and USD use a dated ECB rate. Revenue, valuation and personal wealth are kept apart.
 * **The round simulator** covers option-pool shuffle, dilution, price per share and "what does selling 15% mean?". **The investor CRM** tracks stage history. A warm intro shows only when you record one. Outreach is drafts only.
 * **The Copilot** is a cofounder you can talk to. It takes only whitelisted internal actions: add a task, change a model driver, start agent work, record a decision or set a stage. It never sends, spends or signs anything.
+* **The office**: a 3D black office of your agents at their desks, driven by real task state, so nobody is shown working unless a task is actually running. Tap anyone to see or assign their work.
 * **Scheduled work**: a daily founder briefing and a weekly venture review that flags stalled ventures, follow-ups and costs above plan.
 
 ## Principles built into the code

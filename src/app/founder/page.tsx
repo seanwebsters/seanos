@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Art, AgentBadge, agentName } from "@/components/ui";
 import { Delegate, LiveRefresh } from "@/components/client";
 import { CopilotChat, TaskCheck } from "@/components/founder";
+import { Office3D } from "@/components/Office3D";
+import { officeState } from "@/lib/founder/office";
 import { Icon } from "@/components/Icon";
 import { dashboardData, STAGE_GROUPS } from "@/lib/founder/views";
 import { STREAMS, money, type StreamKey } from "@/lib/founder/finmodel";
@@ -11,28 +13,9 @@ export const dynamic = "force-dynamic";
 
 const COLORS = ["var(--fe-1)", "var(--fe-2)", "var(--fe-3)", "var(--fe-4)"];
 
-function Skyline() {
-  // A quiet London silhouette: Elizabeth Tower, the Eye, the Shard and rooftops.
-  return (
-    <svg viewBox="0 0 1200 220" preserveAspectRatio="xMidYMax slice" className="absolute inset-x-0 bottom-0 h-[62%] w-full" aria-hidden>
-      <defs>
-        <linearGradient id="fo-city" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3b2a3e" stopOpacity="0.85" /><stop offset="1" stopColor="#1d1624" /></linearGradient>
-      </defs>
-      <g fill="none" stroke="#3b2a3e" strokeOpacity="0.55" strokeWidth="2">
-        <circle cx="300" cy="120" r="78" /><circle cx="300" cy="120" r="6" fill="#3b2a3e" />
-        {Array.from({ length: 16 }, (_, i) => { const a = (i / 16) * Math.PI * 2; return <line key={i} x1="300" y1="120" x2={300 + Math.cos(a) * 78} y2={120 + Math.sin(a) * 78} />; })}
-      </g>
-      <path fill="url(#fo-city)" d="M0 220V170h40v-20h30v30h25v-40h20v40h30v-25h35v35h40v-30l10-10 10 10v30h30V160h25v20h40V120h12V70l8-30 8 30v50h12v40h50v-20h35v30h45v-55h18V90h10l5-20 5 20h10v35h18v55h40v-35h40v20h55l70-150 22 150h30v-30h40v40h50v-50h20v-25h30v25h20v50h40v-20h45v35h50v-60h25v60h40v-25h40v35h30V220z" />
-      <g fill="#ffcf8a" opacity="0.8">
-        {Array.from({ length: 70 }, (_, i) => <rect key={i} x={(i * 97) % 1180 + 10} y={168 + ((i * 37) % 44)} width="3" height="4" />)}
-      </g>
-    </svg>
-  );
-}
-
 export default async function FounderPage({ searchParams }: { searchParams: Promise<{ f?: string; fv?: string }> }) {
   const sp = await searchParams;
-  const d = await dashboardData({ filter: sp.f ?? "all", finVenture: sp.fv ?? null });
+  const [d, office] = await Promise.all([dashboardData({ filter: sp.f ?? "all", finVenture: sp.fv ?? null }), officeState()]);
   const b = d.briefing;
   const attention = ((b?.data as { attention?: { title: string; venture: string | null; why: string }[] })?.attention ?? []);
   const actions = ((b?.data as { actions?: { title: string; venture: string | null; why: string }[] })?.actions ?? []);
@@ -48,54 +31,53 @@ export default async function FounderPage({ searchParams }: { searchParams: Prom
   const y3 = d.byQuarter.slice(8).reduce((s, q) => s + streams.reduce((a, k) => a + q[k], 0), 0);
   const y3By = Object.fromEntries(streams.map((k) => [k, d.byQuarter.slice(8).reduce((s, q) => s + q[k], 0)]));
 
+  const briefing = (
+    <div className="glass rounded-[22px] p-4 shadow-sm ring-1 ring-line">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-bg"><Icon name="mic" size={16} /></span>
+        <div className="min-w-0">
+          <div className="text-[14px] font-medium">{greeting}, Sean.</div>
+          <div className="text-[13px] text-muted">{b ? `Here's what needs your attention${briefDate ? ` (${fmtDate(briefDate)})` : ""}:` : "No briefing yet. Your cofounder can prepare one from your real records."}</div>
+        </div>
+      </div>
+      {b ? (
+        <ol className="mt-3 space-y-1.5">
+          {[...actions, ...attention].slice(0, 5).map((a, i) => {
+            const v = d.ventures.find((x) => x.name === a.venture);
+            return (
+              <li key={i}><Link href={v ? `/founder/v/${v.id}` : "/founder"} className="flex items-center gap-2.5 rounded-xl px-1 py-1 text-[13.5px] hover:bg-raised">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-raised text-[11px] tabular-nums">{i + 1}</span>
+                <span className="min-w-0 flex-1 truncate" title={a.why}>{a.title}</span>
+                {i === 0 && <Icon name="arrow" size={14} className="text-faint" />}
+              </Link></li>
+            );
+          })}
+        </ol>
+      ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Delegate label={b ? "Refresh briefing" : "Prepare my briefing"} kind="founder_briefing" instruction="Founder briefing" className="chip" icon="refresh" />
+        <Delegate label="Rank my ventures" kind="commercial_analysis" instruction="Rank my ventures" className="chip" icon="chart" />
+      </div>
+    </div>
+  );
+
   return (
     <div className="wide pb-10">
       <LiveRefresh active={live} every={5000} />
-      {/* Hero */}
-      <section className="relative mx-0 overflow-hidden lg:mt-6 lg:rounded-[28px]">
-        <div className="fo-hero relative h-[300px] lg:h-[400px]">
-          <Skyline />
-          <div className="pt-safe relative z-10 px-6 pt-12 text-white lg:px-10 lg:pt-12">
-            <h1 className="display text-[56px] leading-[0.95] drop-shadow lg:text-[96px]">Founder OS</h1>
-            <p className="mt-2 max-w-md text-[17px] text-white/90 lg:text-[21px]">Your AI cofounder for the business side of building.</p>
-            <p className="mt-1 text-[13px] text-white/70 lg:text-[15px]">Strategy · Finance · Fundraising · Partnerships · Operations · Growth</p>
+      {/* Hero: the office, live */}
+      <section className="fo-office relative mx-0 overflow-hidden lg:mt-6 lg:rounded-[28px] lg:ring-1 lg:ring-line">
+        <Office3D initial={office} className="h-[420px] lg:h-[540px]" overlay={
+          <div className="pt-safe pointer-events-none absolute left-0 top-0 z-[5] px-5 pt-4 lg:px-8 lg:pt-7">
+            <h1 className="display text-[44px] leading-[0.95] lg:text-[72px]">Founder OS</h1>
+            <p className="mt-1 max-w-[17rem] text-[13.5px] text-white/60 lg:max-w-sm lg:text-[16px]">Your AI cofounder and its team. Tap anyone to see their work.</p>
+            <Link href="/founder/office" className="pointer-events-auto mt-2 inline-flex items-center gap-1 text-[12.5px] font-medium text-[#d9c08f]">Full screen <Icon name="arrow" size={13} /></Link>
           </div>
-          <div className="absolute bottom-24 right-[34%] hidden rotate-[-8deg] font-display text-[22px] italic leading-tight text-white/85 xl:block">Big ideas.<br />Real plans.<br />Let&apos;s build.</div>
-        </div>
-        {/* Briefing card */}
-        <div className="relative z-10 mx-4 -mt-20 lg:absolute lg:right-5 lg:top-5 lg:mx-0 lg:mt-0 lg:w-[330px]">
-          <div className="glass rounded-[22px] p-4 shadow-2xl ring-1 ring-line">
-            <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-bg"><Icon name="mic" size={16} /></span>
-              <div className="min-w-0">
-                <div className="text-[14px] font-medium">{greeting}, Sean.</div>
-                <div className="text-[13px] text-muted">{b ? `Here's what needs your attention${briefDate ? ` (${fmtDate(briefDate)})` : ""}:` : "No briefing yet. Your cofounder can prepare one from your real records."}</div>
-              </div>
-            </div>
-            {b ? (
-              <ol className="mt-3 space-y-1.5">
-                {[...actions, ...attention].slice(0, 5).map((a, i) => {
-                  const v = d.ventures.find((x) => x.name === a.venture);
-                  return (
-                    <li key={i}><Link href={v ? `/founder/v/${v.id}` : "/founder"} className="flex items-center gap-2.5 rounded-xl px-1 py-1 text-[13.5px] hover:bg-raised">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-raised text-[11px] tabular-nums">{i + 1}</span>
-                      <span className="min-w-0 flex-1 truncate" title={a.why}>{a.title}</span>
-                      {i === 0 && <Icon name="arrow" size={14} className="text-faint" />}
-                    </Link></li>
-                  );
-                })}
-              </ol>
-            ) : null}
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Delegate label={b ? "Refresh briefing" : "Prepare my briefing"} kind="founder_briefing" instruction="Founder briefing" className="chip" icon="refresh" />
-              <Delegate label="Rank my ventures" kind="commercial_analysis" instruction="Rank my ventures" className="chip" icon="chart" />
-            </div>
-          </div>
-        </div>
+        } />
       </section>
 
-      <div className="mt-4 grid gap-5 lg:mt-[-72px] lg:grid-cols-[minmax(0,1fr)_330px] lg:px-5">
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:px-5">
         <div className="min-w-0 space-y-5">
+          <div className="mx-4 lg:hidden">{briefing}</div>
           {/* KPI strip */}
           <div className="no-scrollbar relative z-10 flex gap-3 overflow-x-auto px-5 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
             <Kpi label="Forecast revenue" hint="year 1, base case" value={d.modelled.length ? money(d.y1) : "–"} sub={d.modelled.length ? `${d.modelled.length} model${d.modelled.length > 1 ? "s" : ""} · forecast` : "No models yet"} />
@@ -240,7 +222,8 @@ export default async function FounderPage({ searchParams }: { searchParams: Prom
         </div>
 
         {/* Right column */}
-        <aside className="min-w-0 space-y-5 lg:pt-[84px]">
+        <aside className="min-w-0 space-y-5">
+          <div className="hidden lg:block">{briefing}</div>
           <section className="card relative z-10 mx-5 flex flex-col overflow-hidden lg:mx-0">
             <div className="flex items-center justify-between px-4 pt-4"><h2 className="display text-[28px] leading-none">AI Cofounder</h2><Link href="/founder/copilot" className="text-[12px] text-muted">Open</Link></div>
             {d.deliverables.length > 0 && (

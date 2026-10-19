@@ -47,6 +47,10 @@ Founder OS is a new section of SEAN OS (`/founder`), not a separate app. It adds
 
 ## Screens
 
+* **The office** (dashboard hero, full screen at `/founder/office`): a 3D black office where each of the 11 Founder OS agents has a desk.
+  * Screens, typing and floor rings come only from real task and step records: working, queued, waiting on you or blocked. An idle agent sits still, and the whiteboard shows live counts.
+  * Tap an agent to see its current task and step, or give it work (routed through the Chief of Staff).
+  * There's a list view for accessibility, and motion stops when reduced motion is on.
 * `/founder`: the AI Cofounder dashboard. It has the briefing, forecast revenue (labelled), active ventures, cash from your actuals, the next funding target, meetings from your calendar, ventures by stage, financial overview by stream, the fundraising pipeline, upcoming tasks, the Copilot, real agent activity, investor opportunities and Calmlings partnerships. Calmlings partnerships are labelled as Calm work.
 * `/founder/v/:id`: the venture workspace. Tabs are Overview, Strategy (every field editable), Finance (live model editor), Funding, Investors, Tasks, Risks & legal, Docs and History.
   * Finance: drivers by basis, base/downside/upside overrides, opex, team, startup costs, funding, actuals, formulas, versions with restore, and CSV export.

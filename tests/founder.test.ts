@@ -150,3 +150,27 @@ describe("founder os", () => {
     expect(await getCredential("companies_house")).toBe("another-key-9999");
   });
 });
+
+describe("agent office", () => {
+  it("animates only agents with real work, attributing a running step to its own agent", async () => {
+    const { db } = await setup(() => ({}));
+    const { officeState } = await import("@/lib/founder/office");
+    const { createTask } = await import("@/lib/engine");
+    expect((await officeState()).agents.every((a) => a.state === "idle" && !a.task)).toBe(true);
+    const t = await createTask({ title: "Webster: build the business", kind: "venture_build", agent: "chief_of_staff" });
+    await db.update("tasks", t.id, { status: "running" });
+    await db.insert("task_steps", { id: "st1", task_id: t.id, idx: 1, agent: "cfo", title: "Financial model for Webster", status: "running", output: null, cost_cents: 0, started_at: new Date().toISOString(), finished_at: null, error: null });
+    const q = await createTask({ title: "Find investors", kind: "investor_research", agent: "investors" });
+    const w = await createTask({ title: "Draft", kind: "research_report", agent: "fundraising" });
+    await db.update("tasks", w.id, { status: "awaiting_approval" });
+    const s = await officeState();
+    const by = Object.fromEntries(s.agents.map((a) => [a.key, a]));
+    expect(by.cfo.state).toBe("working");
+    expect(by.cfo.task!.step).toBe("Financial model for Webster");
+    expect(by.chief_of_staff.state).toBe("idle");
+    expect(by.investors.state).toBe("queued");
+    expect(by.investors.task!.id).toBe(q.id);
+    expect(by.fundraising.state).toBe("waiting");
+    expect(by.legal.state).toBe("idle");
+  });
+});
