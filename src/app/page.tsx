@@ -3,8 +3,11 @@ import { homeData } from "@/lib/services/home";
 import { AGENT_BY_KEY, isAgentKey } from "@/lib/ai/agents";
 import { fmtDate, fmtTime, relTime } from "@/lib/time";
 import { Icon } from "@/components/Icon";
-import { AgentBadge, Art, Empty, Img, List, Pill, Rail, Row, Section, agentName } from "@/components/ui";
-import { CopyButton, Delegate, LiveRefresh, Patch } from "@/components/client";
+import { AgentBadge, Art, Img, List, Pill, Rail, Row, Section, agentName } from "@/components/ui";
+import { CopyButton, Delegate, LiveRefresh, PageNav, Patch } from "@/components/client";
+import { Office3D } from "@/components/Office3D";
+import { officeState } from "@/lib/founder/office";
+import { homeFounder } from "@/lib/founder/views";
 import { describeSchedule } from "@/lib/engine/schedule";
 import { gbp } from "@/lib/finance";
 
@@ -17,56 +20,132 @@ export default async function Home() {
   const { part } = d;
   const first = d.profile.name.split(" ")[0];
   const lead = d.stories[0];
-  const cards = {
-    briefing: <Briefing key="briefing" d={d} />,
-    edition: d.edition ? <EditionCard key="edition" d={d} /> : null,
-    opportunities: <Opportunities key="opps" d={d} />,
-    approvals: d.approvals.length ? <Approvals key="approvals" d={d} /> : null,
-    people: d.people.length ? <People key="people" d={d} /> : null,
-    outfit: <Outfit key="outfit" d={d} />,
-    calendar: <Calendar key="calendar" d={d} />,
-    london: d.experiences.length ? <London key="london" d={d} /> : null,
-    completed: d.completedRecent.length ? <Completed key="completed" d={d} /> : null,
-    active: d.active.length ? <Active key="active" d={d} /> : null,
-    activity: <Activity key="activity" d={d} />,
-    reading: d.saved.length || d.edition?.big_idea ? <Reading key="reading" d={d} /> : null,
-    tomorrow: <Tomorrow key="tomorrow" d={d} />,
-    reminders: d.reminders.length ? <Reminders key="reminders" d={d} /> : null,
-    money: d.money ? <Money key="money" d={d} /> : null,
-  };
-  const order: (keyof typeof cards)[] =
-    part === "morning" ? ["briefing", "edition", "completed", "opportunities", "approvals", "people", "outfit", "calendar", "money", "reminders", "london", "active", "activity"]
-    : part === "day" ? ["calendar", "active", "opportunities", "approvals", "briefing", "people", "edition", "completed", "money", "london", "reminders", "activity"]
-    : ["completed", "reading", "tomorrow", "approvals", "opportunities", "money", "london", "people", "edition", "reminders", "activity"];
+  const [office, founder] = await Promise.all([officeState(), homeFounder()]);
+  const evening = part === "evening";
 
   return (
     <div>
       <LiveRefresh active={d.active.some((t) => t.status === "running" || t.status === "queued")} every={6000} />
       <header className="relative">
-        <Img src={part === "morning" ? lead?.image_url : null} seed={`${d.today}-${part}`} alt="" className="h-[300px] w-full lg:mt-8 lg:rounded-[28px]">
+        <Img src={part === "morning" ? lead?.image_url : null} seed={`${d.today}-${part}`} alt="" className="h-[260px] w-full lg:mt-8 lg:rounded-[28px]">
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-bg" />
           <div className="pt-safe absolute inset-x-0 top-0 flex items-center justify-between px-5 pt-4 text-white lg:px-8">
             <div className="text-[13px] font-medium opacity-90">{fmtDate(d.today, { weekday: "long", day: "numeric", month: "long" })}</div>
             <div className="flex items-center gap-2">
               {d.weather && <span className="rounded-full bg-black/25 px-3 py-1 text-[13px] backdrop-blur">{d.weather.temp_c}° {d.weather.summary}</span>}
-              <Link href="/founder" aria-label="Founder OS" className="flex h-9 items-center gap-1.5 rounded-full bg-black/25 px-3 text-[13px] font-medium backdrop-blur"><Icon name="rocket" size={15} /> Founder</Link>
               <Link href="/infinity" aria-label="SEAN ∞ mode" className="flex h-9 items-center rounded-full bg-black/25 px-3 text-[17px] font-semibold backdrop-blur">∞</Link>
               <Link href="/notifications" aria-label="Notifications" className="flex h-9 w-9 items-center justify-center rounded-full bg-black/25 backdrop-blur"><Icon name="bell" size={18} /></Link>
             </div>
           </div>
         </Img>
-        <div className="relative -mt-32 px-5 lg:px-8">
+        <div className="relative -mt-28 px-5 lg:px-8">
           <h1 className="display text-[46px] leading-[0.98] lg:text-[64px]">{GREETING[part]}, {first}.</h1>
-          <p className="mt-3 max-w-xl text-[16px] leading-relaxed text-ink/80">
-            {part === "morning" ? "Here's what your team has prepared for you." : part === "day" ? "Here's where things stand, and what's next." : "Here's what got done today, and tomorrow's setup."}
-          </p>
+          <p className="mt-3 max-w-xl text-[16px] leading-relaxed text-ink/80">Everything in one place. Jump to a section below, or just scroll.</p>
           <TeamStrip d={d} />
         </div>
       </header>
-      <Setup d={d} />
-      {order.map((k) => cards[k])}
-      <div className="h-6" />
+
+      <PageNav />
+
+      <Zone id="today" title="Today" href="/life?tab=calendar" link="calendar">
+        <Setup d={d} />
+        {!evening && <Briefing d={d} />}
+        <Calendar d={d} />
+        {d.approvals.length > 0 && <Approvals d={d} />}
+        {d.reminders.length > 0 && <Reminders d={d} />}
+        {evening && <Tomorrow d={d} />}
+      </Zone>
+
+      <Zone id="founder" title="Founder OS" href="/founder" link="Founder OS">
+        <div className="fo-office relative mx-5 mt-3 overflow-hidden rounded-card ring-1 ring-line lg:mx-0">
+          <Office3D initial={office} className="h-[340px] lg:h-[420px]" overlay={
+            <div className="pointer-events-none absolute left-0 top-0 z-[5] px-4 pt-3 lg:px-6 lg:pt-5">
+              <div className="display text-[28px] leading-none lg:text-[40px]">The office</div>
+              <div className="mt-1 text-[12.5px] text-white/60">Tap anyone to see their work.</div>
+            </div>
+          } />
+        </div>
+        {founder.actions.length > 0 && (
+          <div className="mx-5 mt-4 lg:mx-0">
+            <div className="eyebrow mb-2">Your cofounder says today</div>
+            <ol className="space-y-1.5">{founder.actions.map((a, i) => <li key={i}><Link href={founder.ventureId(a.venture) ? `/founder/v/${founder.ventureId(a.venture)}` : "/founder"} className="card flex items-center gap-3 p-3 text-[14px]"><span className="display text-[22px] leading-none text-accent">{i + 1}</span><span className="min-w-0 flex-1 truncate">{a.title}</span><Icon name="chevron" size={16} className="text-faint" /></Link></li>)}</ol>
+          </div>
+        )}
+        <div className="mt-4"><Rail>
+          {founder.top.map(({ v, progress }) => (
+            <Link key={v.id} href={`/founder/v/${v.id}`} className="w-[46%] shrink-0 snap-start rounded-card bg-surface p-3.5 ring-1 ring-line sm:w-[190px]">
+              <div className="flex items-center gap-2"><Art seed={v.name} className="h-8 w-8 shrink-0 rounded-lg"><span className="absolute inset-0 flex items-center justify-center font-display text-[16px] text-white">{v.name[0]}</span></Art><span className="truncate text-[14px] font-semibold">{v.name}</span></div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-raised"><div className="h-full rounded-full bg-sage" style={{ width: `${progress}%` }} /></div>
+              <div className="mt-1.5 text-[11.5px] text-muted">{progress}% built · {v.stage}</div>
+            </Link>
+          ))}
+          <Link href="/founder/new" className="flex w-[46%] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-card border border-dashed border-line p-3.5 text-[13px] text-muted sm:w-[190px]"><Icon name="plus" size={18} /> New venture</Link>
+        </Rail></div>
+        {(founder.running > 0 || founder.proposed > 0) && <div className="mx-5 mt-3 text-[13px] text-muted lg:mx-0">Growth: {founder.running} experiment{founder.running === 1 ? "" : "s"} running{founder.proposed ? `, ${founder.proposed} waiting for your approval` : ""}.</div>}
+      </Zone>
+
+      <Zone id="news" title="News" href="/edition" link="edition">
+        {d.edition ? <EditionCard d={d} /> : (
+          <div className="mt-4"><Hint icon="edition" title="No edition yet" body="The Sean Edition is your daily newspaper, built from verified stories.">
+            <Delegate label="Make today's edition" kind="edition" className="btn-ghost" icon="play" />
+          </Hint></div>
+        )}
+        {(d.saved.length > 0 || d.edition?.big_idea) && <Reading d={d} />}
+      </Zone>
+
+      <Zone id="opportunities" title="Opportunities & people" href="/opportunities" link="opportunities">
+        <Opportunities d={d} />
+        {d.people.length > 0 && <People d={d} />}
+      </Zone>
+
+      <Zone id="money" title="Money" href="/finance" link="money">
+        {d.money ? <Money d={d} /> : (
+          <Link href="/finance?tab=transactions" className="card mx-5 mt-3 flex items-center gap-3 p-4 lg:mx-0">
+            <Icon name="wallet" size={20} className="text-accent" />
+            <span className="min-w-0 flex-1"><span className="block text-[15px] font-medium">Import a bank statement</span><span className="block text-[13px] text-muted">See spending, budgets, bills and goals here.</span></span>
+            <Icon name="chevron" size={18} className="text-faint" />
+          </Link>
+        )}
+      </Zone>
+
+      <Zone id="life" title="Life" href="/life" link="life">
+        <Outfit d={d} />
+        {d.experiences.length > 0 && <London d={d} />}
+      </Zone>
+
+      <Zone id="team" title="Your team" href="/agents" link="agents">
+        {d.active.length > 0 && <Active d={d} />}
+        {d.completedRecent.length > 0 && <Completed d={d} />}
+        <Activity d={d} />
+      </Zone>
+      <div className="h-10" />
     </div>
+  );
+}
+
+/** A one-line empty state, so quiet sections don't take over the page. */
+function Hint({ icon = "sparkle", title, body, children }: { icon?: string; title: string; body?: React.ReactNode; children?: React.ReactNode }) {
+  return (
+    <div className="mx-5 flex flex-wrap items-center gap-3 rounded-card bg-surface p-3.5 ring-1 ring-line/70 lg:mx-0">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-raised text-accent"><Icon name={icon} size={17} /></span>
+      <div className="min-w-0 flex-1 basis-48">
+        <div className="text-[14.5px] font-medium">{title}</div>
+        {body && <div className="line-clamp-2 text-[12.5px] leading-snug text-muted">{body}</div>}
+      </div>
+      {children && <div className="flex flex-wrap gap-2">{children}</div>}
+    </div>
+  );
+}
+
+function Zone({ id, title, href, link, children }: { id: string; title: string; href: string; link: string; children: React.ReactNode }) {
+  return (
+    <section id={id} className="mt-10 [&>section:first-of-type]:mt-4">
+      <div className="mx-5 flex items-center justify-between border-t border-line pt-5 lg:mx-0">
+        <h2 className="eyebrow text-[12px] text-ink">{title}</h2>
+        <Link href={href} className="flex items-center gap-0.5 text-[13px] font-medium text-accent">Open {link} <Icon name="chevron" size={15} /></Link>
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -89,11 +168,10 @@ function TeamStrip({ d }: { d: D }) {
 function Setup({ d }: { d: D }) {
   if (!d.connected) {
     return (
-      <div className="mx-5 mt-7 overflow-hidden rounded-card bg-surface ring-1 ring-line lg:mx-8">
-        <Art seed="setup" className="h-24" />
-        <div className="p-5">
+      <div className="mx-5 mt-4 overflow-hidden rounded-card bg-surface ring-1 ring-line lg:mx-0">
+        <div className="p-4">
           <div className="eyebrow text-accent">Connect your team</div>
-          <div className="display mt-1 text-[26px] leading-tight">Your agents are ready, but not yet switched on.</div>
+          <div className="display mt-1 text-[22px] leading-tight">Your agents are ready, but not yet switched on.</div>
           <p className="mt-2 text-[14px] leading-relaxed text-muted">SEAN OS doesn't fake work. Add an Anthropic API key to the server as <code className="rounded bg-raised px-1">ANTHROPIC_API_KEY</code> and the newsroom, studio and research teams can start. Everything else on this screen fills in from their real output.</p>
           <Link href="/settings" className="btn-primary mt-4">Open setup <Icon name="arrow" size={16} /></Link>
         </div>
@@ -102,9 +180,9 @@ function Setup({ d }: { d: D }) {
   }
   if (!d.settings.autopilot) {
     return (
-      <div className="mx-5 mt-7 rounded-card bg-surface p-5 ring-1 ring-line lg:mx-8">
+      <div className="mx-5 mt-4 rounded-card bg-surface p-4 ring-1 ring-line lg:mx-0">
         <div className="eyebrow text-accent">Autopilot is off</div>
-        <div className="display mt-1 text-[24px] leading-tight">Let your team work while you sleep.</div>
+        <div className="display mt-1 text-[22px] leading-tight">Let your team work while you sleep.</div>
         <p className="mt-2 text-[14px] leading-relaxed text-muted">Turning on Autopilot runs the morning edition, briefings and weekly scans on schedule. Estimated around ${(d.settings.daily_budget_cents / 100).toFixed(0)}/day at most, capped by your budget. You can run anything once now instead.</p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Patch table="settings" id="app" patch={{ autopilot: true }} className="btn-primary" toastText="Autopilot on">Turn on Autopilot</Patch>
@@ -145,9 +223,9 @@ function Briefing({ d }: { d: D }) {
           )}
         </div>
       ) : (
-        <Empty icon="target" title="No briefing yet today" body="Your Chief of Staff prepares this every morning from your calendar, tasks, people and opportunities.">
+        <Hint icon="target" title="No briefing yet today" body="Your Chief of Staff prepares this every morning from your calendar, tasks, people and opportunities.">
           <Delegate label="Prepare it now" kind="briefing" className="btn-ghost" icon="play" />
-        </Empty>
+        </Hint>
       )}
     </Section>
   );
@@ -195,10 +273,10 @@ function Opportunities({ d }: { d: D }) {
   if (!cards.length && !o.action && !d.opportunities.length) {
     return (
       <Section title="Opportunities" href="/opportunities">
-        <Empty icon="target" title="Nothing worth your time yet" body="Trend Radar, Venture Studio and Speaking Scout surface only genuinely worthwhile finds. Run a scan to start.">
+        <Hint icon="target" title="Nothing worth your time yet" body="Trend Radar, Venture Studio and Speaking Scout surface only genuinely worthwhile finds. Run a scan to start.">
           <Delegate label="Scan trends" kind="trend_scan" />
           <Delegate label="Find speaking slots" kind="speaking_scan" />
-        </Empty>
+        </Hint>
       </Section>
     );
   }
@@ -244,7 +322,7 @@ function Approvals({ d }: { d: D }) {
     <Section title="Waiting for you" href="/approvals">
       <List>
         {d.approvals.slice(0, 4).map((a) => (
-          <Row key={a.id} href={`/approvals#${a.id}`} left={<AgentBadge agent={a.agent} />} title={a.title} sub={a.summary} right={<Pill status="pending" label={a.type === "draft" ? "Draft" : "Outreach"} />} />
+          <Row key={a.id} href={`/approvals#${a.id}`} left={<AgentBadge agent={a.agent} />} title={a.title} sub={a.summary} right={<Pill status="pending" label={({ draft: "Draft", outreach: "Outreach", experiment: "Experiment", strategy: "Strategy", task: "Task" } as Record<string, string>)[a.type] ?? "Review"} />} />
         ))}
       </List>
     </Section>
@@ -295,10 +373,10 @@ function Outfit({ d }: { d: D }) {
           {o.missing.length > 0 && <div className="mt-2 text-[12.5px] text-faint">Would complete it: {o.missing.join(", ")}</div>}
         </Link>
       ) : (
-        <Empty icon="shirt" title="No outfit yet" body="Your stylist works from the weather, your calendar and what you own. Add a few pieces to your wardrobe for better suggestions.">
+        <Hint icon="shirt" title="No outfit yet" body="Your stylist works from the weather, your calendar and what you own. Add a few pieces to your wardrobe for better suggestions.">
           <Delegate label="Style me today" kind="outfit" />
           <Link href="/wardrobe" className="chip"><Icon name="upload" size={14} /> Add clothes</Link>
-        </Empty>
+        </Hint>
       )}
     </Section>
   );
@@ -315,9 +393,9 @@ function Calendar({ d }: { d: D }) {
           ))}
         </List>
       ) : (
-        <Empty icon="calendar" title={d.settings.calendar_ics_url ? "Nothing in the diary" : "Calendar not connected"} body={d.settings.calendar_ics_url ? "A clear day. Good for deep work." : "Paste your calendar's private iCal link in Settings to see meetings and get preparation notes."}>
+        <Hint icon="calendar" title={d.settings.calendar_ics_url ? "Nothing in the diary" : "Calendar not connected"} body={d.settings.calendar_ics_url ? "A clear day. Good for deep work." : "Paste your calendar's private iCal link in Settings to see meetings and get preparation notes."}>
           {!d.settings.calendar_ics_url && <Link href="/settings#calendar" className="chip">Connect calendar</Link>}
-        </Empty>
+        </Hint>
       )}
     </Section>
   );
@@ -384,7 +462,7 @@ function Activity({ d }: { d: D }) {
           ))}
         </div>
       ) : (
-        <Empty icon="agents" title="Quiet so far" body="Every entry here is real work from a real task. Delegate something to see your team in action." />
+        <Hint icon="agents" title="Quiet so far" body="Every entry here is real work from a real task. Delegate something to see your team in action." />
       )}
     </Section>
   );
@@ -419,7 +497,7 @@ function Tomorrow({ d }: { d: D }) {
           ))}
         </List>
       ) : (
-        <Empty icon="calendar" title="Nothing scheduled tomorrow" body={d.settings.autopilot ? `Your morning run is set: ${describeSchedule({ cadence: "daily", weekday: null, hour: 5, minute: 30 }).toLowerCase()}.` : "Turn on Autopilot to wake up to a fresh edition and briefing."} />
+        <Hint icon="calendar" title="Nothing scheduled tomorrow" body={d.settings.autopilot ? `Your morning run is set: ${describeSchedule({ cadence: "daily", weekday: null, hour: 5, minute: 30 }).toLowerCase()}.` : "Turn on Autopilot to wake up to a fresh edition and briefing."} />
       )}
     </Section>
   );

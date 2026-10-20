@@ -109,3 +109,23 @@ export async function dashboardData(opts: { filter: string; finVenture: string |
     ventureName: (id: string) => ventures.find((v) => v.id === id)?.name ?? "",
   };
 }
+
+/** A light summary of Founder OS for the Home page. */
+export async function homeFounder() {
+  const db = getDb();
+  const ventures = (await db.list("ventures")).filter((v) => v.stage !== "archived" && !v.merged_into);
+  const docs = await db.list("venture_docs");
+  const models = await db.list("fin_models");
+  const vtasks = await db.list("venture_tasks");
+  const exps = await db.list("experiments");
+  const top = ventures.map((v) => ({ v, progress: progressOf(v, docs, models.find((m) => m.venture_id === v.id && m.version > 0), vtasks.filter((t) => t.venture_id === v.id)) }))
+    .sort((a, b) => b.progress - a.progress || b.v.priority - a.v.priority).slice(0, 6);
+  const briefing = docs.find((d) => d.venture_id === "portfolio" && d.kind === "briefing");
+  const actions = ((briefing?.data as { actions?: { title: string; venture: string | null }[] })?.actions ?? []).slice(0, 3);
+  return {
+    top, actions, count: ventures.length,
+    running: exps.filter((e) => e.status === "running").length,
+    proposed: exps.filter((e) => e.status === "proposed").length,
+    ventureId: (name: string | null) => ventures.find((v) => v.name === name)?.id ?? null,
+  };
+}

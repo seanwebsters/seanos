@@ -232,31 +232,55 @@ export function AskBar() {
 
 /* ----------------------------- Navigation ----------------------------- */
 
-const TABS = [
-  { href: "/", label: "Home", icon: "home" },
-  { href: "/edition", label: "Edition", icon: "edition" },
-  { href: "/studio", label: "Studio", icon: "studio" },
-  { href: "/life", label: "Life", icon: "life" },
-  { href: "/agents", label: "Agents", icon: "agents" },
+/** The five sections of the one-page Home, in order. */
+export const ZONES = [
+  { id: "today", label: "Today", icon: "sun" },
+  { id: "founder", label: "Founder", icon: "rocket" },
+  { id: "news", label: "News", icon: "edition" },
+  { id: "opportunities", label: "Opportunities", icon: "target" },
+  { id: "money", label: "Money", icon: "wallet" },
+  { id: "life", label: "Life", icon: "life" },
+  { id: "team", label: "Team", icon: "agents" },
 ];
 
-const MORE = [
-  { href: "/founder", label: "Founder OS", icon: "rocket" },
-  { href: "/infinity", label: "SEAN ∞", icon: "sparkle" },
-  { href: "/opportunities", label: "Opportunities", icon: "target" },
-  { href: "/trends", label: "Trends", icon: "trend" },
-  { href: "/ideas", label: "Ideas", icon: "bulb" },
-  { href: "/speaking", label: "Speaking", icon: "stage" },
-  { href: "/people", label: "People", icon: "people" },
-  { href: "/finance", label: "Finance", icon: "wallet" },
-  { href: "/calmlings", label: "Calmlings", icon: "briefcase" },
-  { href: "/tasks", label: "Tasks", icon: "tasks" },
-  { href: "/intelligence", label: "Intelligence", icon: "chart" },
-  { href: "/wardrobe", label: "Wardrobe", icon: "shirt" },
-  { href: "/approvals", label: "Approvals", icon: "inbox" },
-  { href: "/memory", label: "Memory", icon: "brain" },
-  { href: "/automations", label: "Automations", icon: "clock" },
-  { href: "/settings", label: "Settings", icon: "settings" },
+const TABS = [
+  { href: "/", label: "Home", icon: "home" },
+  { href: "/founder", label: "Founder", icon: "rocket" },
+  { href: "/approvals", label: "Inbox", icon: "inbox" },
+  { href: "/agents", label: "Agents", icon: "agents" },
+  { href: "/more", label: "More", icon: "grid" },
+];
+
+/** Every workspace, grouped so there are five places to look rather than twenty. */
+const GROUPS: { title: string; items: { href: string; label: string; icon: string }[] }[] = [
+  { title: "Build", items: [
+    { href: "/founder", label: "Founder OS", icon: "rocket" },
+    { href: "/ideas", label: "Ideas", icon: "bulb" },
+    { href: "/opportunities", label: "Opportunities", icon: "target" },
+    { href: "/trends", label: "Trends", icon: "trend" },
+  ] },
+  { title: "Create & work", items: [
+    { href: "/studio", label: "Studio", icon: "studio" },
+    { href: "/calmlings", label: "Calmlings", icon: "briefcase" },
+    { href: "/speaking", label: "Speaking", icon: "stage" },
+    { href: "/edition", label: "Edition", icon: "edition" },
+  ] },
+  { title: "You", items: [
+    { href: "/life", label: "Life", icon: "life" },
+    { href: "/finance", label: "Money", icon: "wallet" },
+    { href: "/people", label: "People", icon: "people" },
+    { href: "/wardrobe", label: "Wardrobe", icon: "shirt" },
+  ] },
+  { title: "Intelligence", items: [
+    { href: "/infinity", label: "SEAN ∞", icon: "sparkle" },
+    { href: "/intelligence", label: "Insights", icon: "chart" },
+    { href: "/memory", label: "Memory", icon: "brain" },
+  ] },
+  { title: "System", items: [
+    { href: "/tasks", label: "Tasks", icon: "tasks" },
+    { href: "/automations", label: "Automations", icon: "clock" },
+    { href: "/settings", label: "Settings", icon: "settings" },
+  ] },
 ];
 
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`));
@@ -276,12 +300,12 @@ export function TabBar({ badge }: { badge: number }) {
         </button>
         <nav className="glass flex items-center justify-around rounded-[26px] px-1 py-1.5 shadow-2xl ring-1 ring-line">
           {TABS.map((t) => {
-            const on = isActive(path, t.href);
+            const on = isActive(path, t.href) || (t.href === "/more" && GROUPS.some((g) => g.items.some((i) => i.href !== "/founder" && isActive(path, i.href))));
             return (
               <Link key={t.href} href={t.href} className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10.5px] font-medium transition ${on ? "text-ink" : "text-faint"}`}>
                 <Icon name={t.icon} size={23} stroke={on ? 2 : 1.6} />
                 {t.label}
-                {t.href === "/agents" && badge > 0 && <span className="absolute right-[22%] top-0.5 h-2 w-2 rounded-full bg-accent" />}
+                {t.href === "/approvals" && badge > 0 && <span className="absolute right-[24%] top-0.5 min-w-[16px] rounded-full bg-accent px-1 text-center text-[10px] font-semibold leading-4 text-[#141413]">{badge}</span>}
               </Link>
             );
           })}
@@ -294,12 +318,13 @@ export function TabBar({ badge }: { badge: number }) {
 export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unread: number; ventures?: { id: string; name: string }[] }) {
   const path = usePathname();
   if (path.startsWith("/sign-in") || path.includes("/deck")) return null;
-  const item = (t: { href: string; label: string; icon: string }, count?: number) => (
-    <Link key={t.href} href={t.href} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] transition ${isActive(path, t.href) ? "bg-raised font-medium text-ink" : "text-muted hover:text-ink"}`}>
-      <Icon name={t.icon} size={18} /> {t.label}
+  const item = (t: { href: string; label: string; icon: string }, count?: number, small = false) => (
+    <Link key={t.href} href={t.href} className={`flex items-center gap-3 rounded-xl px-3 ${small ? "py-1.5 text-[13.5px]" : "py-2 text-[14px]"} transition ${isActive(path, t.href) ? "bg-raised font-medium text-ink" : "text-muted hover:text-ink"}`}>
+      <Icon name={t.icon} size={small ? 16 : 18} /> {t.label}
       {count ? <span className="ml-auto rounded-full bg-accent px-1.5 text-[11px] font-semibold text-[#141413]">{count}</span> : null}
     </Link>
   );
+  const open = GROUPS.findIndex((g) => g.items.some((i) => isActive(path, i.href)));
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-bg px-4 py-6 lg:flex">
       <Link href="/" className="mb-6 px-3">
@@ -308,7 +333,13 @@ export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unrea
       </Link>
       <div className="mb-4"><AskBar /></div>
       <nav className="no-scrollbar flex-1 space-y-0.5 overflow-y-auto">
-        {TABS.map((t) => item(t, t.href === "/agents" ? badge : undefined))}
+        {TABS.filter((t) => t.href !== "/more").map((t) => item(t, t.href === "/approvals" ? badge : undefined))}
+        {path === "/" && (
+          <>
+            <div className="eyebrow px-3 pb-1 pt-5">On this page</div>
+            {ZONES.map((z) => <a key={z.id} href={`#${z.id}`} className="flex items-center gap-3 rounded-xl px-3 py-1.5 text-[13.5px] text-muted hover:text-ink"><Icon name={z.icon} size={16} /> {z.label}</a>)}
+          </>
+        )}
         {path.startsWith("/founder") && (
           <>
             <div className="flex items-center justify-between px-3 pb-1 pt-5"><span className="eyebrow">Ventures</span><Link href="/founder/new" aria-label="New venture" className="text-muted hover:text-ink"><Icon name="plus" size={16} /></Link></div>
@@ -320,8 +351,16 @@ export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unrea
             ))}
           </>
         )}
-        <div className="eyebrow px-3 pb-1 pt-5">Workspaces</div>
-        {MORE.map((t) => item(t, t.href === "/approvals" ? badge : undefined))}
+        <div className="pt-4">
+          {GROUPS.map((g, i) => (
+            <details key={g.title} open={i === open} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-faint hover:text-ink">
+                {g.title}<Icon name="chevron" size={14} className="transition group-open:rotate-90" />
+              </summary>
+              <div className="pb-1">{g.items.map((t) => item(t, undefined, true))}</div>
+            </details>
+          ))}
+        </div>
       </nav>
       <Link href="/notifications" className="mt-3 flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] text-muted hover:text-ink">
         <Icon name="bell" size={18} /> Notifications {unread > 0 && <span className="ml-auto rounded-full bg-raised px-1.5 text-[11px]">{unread}</span>}
@@ -332,14 +371,59 @@ export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unrea
 
 export function MoreGrid() {
   return (
-    <div className="grid grid-cols-3 gap-3 px-5 lg:hidden">
-      {MORE.map((t) => (
-        <Link key={t.href} href={t.href} className="card flex flex-col items-start gap-6 p-3.5 active:scale-[0.98]">
-          <Icon name={t.icon} size={20} className="text-accent" />
-          <span className="text-[13px] font-medium">{t.label}</span>
-        </Link>
+    <div className="space-y-6 px-5 lg:px-0">
+      {GROUPS.map((g) => (
+        <div key={g.title}>
+          <div className="eyebrow mb-2">{g.title}</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {g.items.map((t) => (
+              <Link key={t.href} href={t.href} className="card flex items-center gap-3 px-3.5 py-3 active:scale-[0.98]">
+                <Icon name={t.icon} size={18} className="shrink-0 text-accent" />
+                <span className="truncate text-[14px] font-medium">{t.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
+  );
+}
+
+/** Sticky jump bar for the one-page Home; highlights the section in view. */
+export function PageNav() {
+  const [active, setActive] = useState(ZONES[0].id);
+  // The active section is the last one whose top has passed just under the bar.
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      let cur = ZONES[0].id;
+      for (const z of ZONES) {
+        const el = document.getElementById(z.id);
+        if (el && el.getBoundingClientRect().top <= 140) cur = z.id;
+      }
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = ZONES[ZONES.length - 1].id;
+      setActive(cur);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, []);
+  const bar = useRef<HTMLElement>(null);
+  // Keep the active chip in view by scrolling the bar sideways only, never the page.
+  useEffect(() => {
+    const b = bar.current, c = document.getElementById(`nav-${active}`);
+    if (b && c) b.scrollTo({ left: c.offsetLeft - b.clientWidth / 2 + c.clientWidth / 2, behavior: "smooth" });
+  }, [active]);
+  return (
+    <nav ref={bar} aria-label="Sections" className="no-scrollbar pt-safe sticky top-0 z-30 mt-5 flex gap-1.5 overflow-x-auto bg-bg/90 px-5 py-2.5 backdrop-blur lg:px-0">
+      {ZONES.map((z) => (
+        <a key={z.id} id={`nav-${z.id}`} href={`#${z.id}`} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition ${active === z.id ? "bg-ink text-bg" : "bg-raised text-muted"}`}>
+          <Icon name={z.icon} size={14} /> {z.label}
+        </a>
+      ))}
+    </nav>
   );
 }
 

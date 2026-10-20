@@ -57,6 +57,8 @@
 }
 
 html, body { background: rgb(var(--bg)); color: rgb(var(--ink)); }
+html { scroll-padding-top: 64px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 body {
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;

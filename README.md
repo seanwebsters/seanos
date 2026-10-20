@@ -18,6 +18,13 @@ A private, mobile-first AI organisation for one person. A team of nineteen speci
 * **Memory**: facts vs inferences, with provenance, confidence and scope (personal / work / public). You can edit, delete and export it. Feedback buttons across the app ("too corporate", "more like this", "don't recommend again") feed back into it.
 * **Automations**: real scheduled jobs (morning run, weekly scans, Friday report). Everything is behind an **Autopilot** switch, which is off by default because it spends API credit, and capped by daily and monthly budgets.
 
+## One page, easy to navigate
+
+Home is the whole of SEAN OS on one page, in seven sections: **Today, Founder OS** (including the live agent office), **News, Opportunities & people, Money, Life** and **Your team**.
+* A sticky section bar jumps straight to any section and highlights where you are. Every section has an "Open …" link to its full workspace.
+* Quiet sections collapse to a one-line prompt.
+* On a phone the tab bar is Home, Founder, Inbox (approvals, with a badge), Agents and More. More groups every workspace into Build, Create & work, You, Intelligence and System. The desktop sidebar mirrors this, with "On this page" links.
+
 ## SEAN ∞: the personal intelligence layer
 
 ∞ Mode (the **∞** button on Home, or `/infinity`) sits on top of everything above. See [`docs/SEAN_INFINITY_PLAN.md`](docs/SEAN_INFINITY_PLAN.md) for the full eight-phase plan. Built so far:
