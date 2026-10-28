@@ -8,7 +8,7 @@ import { Icon } from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 
-const BACK: Record<string, string> = { idea: "/ideas", partnership: "/calmlings", person: "/people", trend: "/trends", speaking: "/speaking", event: "/life?tab=calendar" };
+const BACK: Record<string, string> = { idea: "/ideas", partnership: "/calmlings", person: "/people", trend: "/trends", speaking: "/speaking", event: "/diary" };
 
 export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

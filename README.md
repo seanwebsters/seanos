@@ -18,26 +18,27 @@ A private, mobile-first AI organisation for one person. A team of nineteen speci
 * **Memory**: facts vs inferences, with provenance, confidence and scope (personal / work / public). You can edit, delete and export it. Feedback buttons across the app ("too corporate", "more like this", "don't recommend again") feed back into it.
 * **Automations**: real scheduled jobs (morning run, weekly scans, Friday report). Everything is behind an **Autopilot** switch, which is off by default because it spends API credit, and capped by daily and monthly budgets.
 
-## LIFE HQ: the home page
+## Life HQ: your personal assistant
 
-Home is **LIFE HQ**, the control centre for your whole life, on one page:
-* **Snapshot:** date, weather, role, age and your quote.
-* **This week:** your top three priorities and what's coming up today and tomorrow, from your calendar and dated tasks.
-* **Life overview:** eight areas with progress bars. Career, Business and Money are worked out from your real numbers:
-  * Career: salary against target.
-  * Business: revenue recorded in Founder OS, annualised.
-  * Money: savings accounts against your goal.
+Life HQ has three sections: **Ask**, **Diary** and **Life**. Everything else (Founder OS, money, the life overview dashboard, agents) is still there, one tap away from Life.
 
-  Health, Home, Friends, Travel and Reputation show your own rating, and say "not rated" until you set one.
-* **Calm projects:** photo cards with status and progress, plus a warning when too many are live at once.
-* **Founder HQ:** the journey to £100k, which ticks itself off from your ventures.
-* **Money & wealth:** savings goal, savings history with a labelled projection, income, expenses and net worth. Personal money only.
-* **Life sections:** Health, Home, Friends & family, Travel, Reputation and Journal. Each has its own photo and checklist.
-* **The year ahead, quick capture and recent wins.**
+* **Ask** (home): talk to it like a PA.
+  * "I need to work on the Calmlings colouring book for an hour before Friday": it reads your diary, finds genuinely free hours that respect your routine, meals, sleep and how full each day is, and offers the best three. Nothing goes in the diary until you tap **Add**.
+  * "Reply to Holly tomorrow" becomes a task. "Remember that I want a £100k business" is saved to Life. "Move my 4pm" or "cancel that" becomes a suggestion you approve.
+  * The header shows today's priorities, what's in the diary, what's due, clashes and upcoming trips, all from saved data.
+* **Diary**: day and week views, adding and editing events by hand, the day's free hours and clashes.
+  * Connect Google or iCloud Calendar with its private iCal link. It's read-only, so approved times go into the Life HQ diary, and each one can be exported as an .ics file.
+* **Life**: a searchable memory of everything the assistant knows. It holds what you've told it plus your goals, Calm projects, ventures, money targets, lists, tasks and wins. Edit or forget anything.
+  * Your routine (wake, sleep, work hours, meals) shapes when it suggests things.
+  * **Proactive help** switches the 7:10 morning briefing, the 20:25 "plan tomorrow" and phone notifications on and off. All three start off.
 
-Every photo can be replaced with your own. The journal is private: agents don't read it. The old team-focused home is still there as **Team briefing** (`/today`). Run `supabase/migrations/0007_life_hq.sql` on Supabase.
+**How it stays honest:**
+* **The AI only interprets:** the model works out what you meant. Finding free time is plain calculation over your real diary (`lib/pa/slots.ts`), so a suggested time can't clash with something.
+* **Approval, then save:** diary changes happen only when you approve, and the confirmation you see comes from what was actually saved.
+* **Real failures:** if the assistant can't answer (no API key, or over budget), it says why.
+* **Journal stays private:** the assistant never reads it.
 
-On a phone the tab bar is Life HQ, Founder, Inbox, Agents and More. More groups every other workspace into Build, Create & work, You, Intelligence and System.
+Run `supabase/migrations/0008_assistant.sql` on Supabase.
 
 ## SEAN ∞: the personal intelligence layer
 
@@ -132,7 +133,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
-2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql`, `0004_council_future.sql`, `0005_founder_os.sql` and `0006_growth.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
+2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql`, `0004_council_future.sql`, `0005_founder_os.sql`, `0006_growth.sql`, `0007_life_hq.sql` and `0008_assistant.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 3. Set `ANTHROPIC_API_KEY` and `CRON_SECRET`. Add `OWNER_PASSCODE` and `SESSION_SECRET` only if you want a sign-in.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 

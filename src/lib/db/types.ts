@@ -60,6 +60,9 @@ export interface Settings {
   autonomy_level: 1 | 2 | 3 | 4 | 5;
   /** Emergency stop: no task runs and no automation fires while true. */
   halted: boolean;
+  /** Life HQ only sends briefing notifications when Sean switches this on. */
+  pa_notifications?: boolean;
+  calendar_synced_at?: string | null;
   founder_seeded?: boolean;
   updated_at: string;
 }
@@ -495,6 +498,8 @@ export interface CalendarEvent {
   source: "manual" | "ics";
   external_id: string | null;
   prep_report_id: string | null;
+  /** Who put it in the diary. Assistant-created events always come from an approved proposal. */
+  created_by?: "sean" | "assistant";
 }
 
 export interface Experience {
@@ -1012,7 +1017,38 @@ export interface LifeHQ {
   images: Record<string, string | null>;
   /** Savings balance at the end of each month (YYYY-MM), recorded as it happens. */
   savings_history: Record<string, number>;
+  /** The shape of Sean's day, used when finding time. Times are London HH:MM. */
+  routine?: Routine;
   updated_at: string;
+}
+
+export interface Routine {
+  wake: string;
+  sleep: string;
+  work_start: string;
+  work_end: string;
+  /** 0 = Sunday. */
+  work_days: number[];
+  lunch: string;
+  dinner: string;
+}
+
+/** Something the assistant suggests doing to the diary. Nothing happens until Sean approves it. */
+export interface PaProposal {
+  id: string;
+  message_id: string;
+  kind: "create_event" | "move_event" | "delete_event";
+  title: string;
+  start: string | null;
+  end: string | null;
+  event_id: string | null;
+  reason: string;
+  /** The original ask, so "find another time" can search again without guessing. */
+  request: { title: string; duration: number; deadline: string | null; earliest: string | null; category: "work" | "personal" | "business" } | null;
+  status: "pending" | "approved" | "rejected" | "superseded";
+  result: string | null;
+  created_at: string;
+  decided_at: string | null;
 }
 
 export interface HQItem {
@@ -1177,6 +1213,7 @@ export interface Tables {
   work_projects: WorkProject;
   wins: Win;
   journal: JournalEntry;
+  pa_proposals: PaProposal;
   credentials: CredentialRow;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
@@ -1190,7 +1227,7 @@ export const TABLE_NAMES: TableName[] = [
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
   "transactions", "accounts", "budgets", "recurring", "finance_goals",
   "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log", "decisions", "scenarios",
-  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "growth_metrics", "experiments", "life_hq", "hq_items", "week_priorities", "work_projects", "wins", "journal", "credentials",
+  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "growth_metrics", "experiments", "life_hq", "hq_items", "week_priorities", "work_projects", "wins", "journal", "pa_proposals", "credentials",
   "notifications", "push_subscriptions", "files",
 ];
 

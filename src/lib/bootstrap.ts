@@ -96,6 +96,8 @@ export const DEFAULT_AUTOMATIONS: AutoSeed[] = [
   { workflow: "missing", name: "What am I missing?", description: "A weekly scan of your world for blind spots, risks and overlooked opportunities.", cadence: "weekly", weekday: 3, hour: 6, minute: 45, est_cost_cents: 20 },
   { workflow: "founder_briefing", name: "AI Cofounder briefing", description: "What needs your attention across your ventures, and the three highest-value actions for today.", cadence: "daily", weekday: null, hour: 6, minute: 10, est_cost_cents: 8 },
   { workflow: "venture_review", name: "Weekly venture review", description: "Stalled projects, budget variance, investor follow-ups, deadlines and new opportunities across your ventures.", cadence: "weekly", weekday: 1, hour: 7, minute: 0, est_cost_cents: 20 },
+  { workflow: "pa_briefing", name: "Morning briefing", description: "Life HQ's short briefing: what matters today, what's due, clashes, and when to do the important thing.", cadence: "daily", weekday: null, hour: 7, minute: 10, est_cost_cents: 4 },
+  { workflow: "pa_evening", name: "Plan tomorrow", description: "Each evening, what's fixed and due tomorrow and a sensible order, with time suggestions for your approval.", cadence: "daily", weekday: null, hour: 20, minute: 25, est_cost_cents: 4 },
   { workflow: "growth_review", name: "Growth results", description: "Scores running growth experiments against your real numbers, closes finished ones, and proposes what to try next.", cadence: "weekly", weekday: 5, hour: 8, minute: 10, est_cost_cents: 15 },
   { workflow: "weekly_review", name: "Weekly review", description: "Projects, goals and what to focus on next week.", cadence: "weekly", weekday: 0, hour: 17, minute: 0, est_cost_cents: 20 },
 ];
@@ -137,7 +139,8 @@ export function ensureBootstrapped(): Promise<void> {
     const existing = await db.list("automations");
     for (const a of DEFAULT_AUTOMATIONS) {
       if (existing.some((e) => e.workflow === a.workflow)) continue;
-      const row: Automation = { id: newId("auto"), ...a, params: {}, enabled: true, last_run_at: null, next_run_at: null, last_task_id: null, created_at: nowIso() };
+      // Life HQ briefings stay off until Sean turns them on.
+      const row: Automation = { id: newId("auto"), ...a, params: {}, enabled: !["pa_briefing", "pa_evening"].includes(a.workflow), last_run_at: null, next_run_at: null, last_task_id: null, created_at: nowIso() };
       row.next_run_at = nextRunAt(row).toISOString();
       await db.insert("automations", row);
     }

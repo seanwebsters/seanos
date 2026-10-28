@@ -249,11 +249,9 @@ export const ZONES = [
 ]
 
 const TABS = [
-  { href: "/", label: "Life HQ", icon: "home" },
-  { href: "/founder", label: "Founder", icon: "rocket" },
-  { href: "/approvals", label: "Inbox", icon: "inbox" },
-  { href: "/agents", label: "Agents", icon: "agents" },
-  { href: "/more", label: "More", icon: "grid" },
+  { href: "/", label: "Ask", icon: "chat" },
+  { href: "/diary", label: "Diary", icon: "calendar" },
+  { href: "/life", label: "Life", icon: "person" },
 ];
 
 /** Every workspace, grouped so there are five places to look rather than twenty. */
@@ -293,30 +291,21 @@ const isActive = (path: string, href: string) => (href === "/" ? path === "/" : 
 
 export function TabBar({ badge }: { badge: number }) {
   const path = usePathname();
-  const { open } = useAsk();
   if (path.startsWith("/sign-in") || path.includes("/deck")) return null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 lg:hidden">
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg via-bg/80 to-transparent" />
-      <div className="relative mx-auto max-w-md px-4 pb-[calc(env(safe-area-inset-bottom)+10px)]">
-        <button onClick={() => open()} className="glass mb-2.5 flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-left text-[14.5px] text-muted shadow-xl ring-1 ring-line active:scale-[0.99]">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-[#141413]"><Icon name="sparkle" size={15} /></span>
-          Ask SEAN OS…
-          <Icon name="mic" size={18} className="ml-auto" />
-        </button>
-        <nav className="glass flex items-center justify-around rounded-[26px] px-1 py-1.5 shadow-2xl ring-1 ring-line">
-          {TABS.map((t) => {
-            const on = isActive(path, t.href) || (t.href === "/more" && GROUPS.some((g) => g.items.some((i) => i.href !== "/founder" && isActive(path, i.href))));
-            return (
-              <Link key={t.href} href={t.href} className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[10.5px] font-medium transition ${on ? "text-ink" : "text-faint"}`}>
-                <Icon name={t.icon} size={23} stroke={on ? 2 : 1.6} />
-                {t.label}
-                {t.href === "/approvals" && badge > 0 && <span className="absolute right-[24%] top-0.5 min-w-[16px] rounded-full bg-accent px-1 text-center text-[10px] font-semibold leading-4 text-[#141413]">{badge}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-line/70 bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <nav className="mx-auto flex max-w-md items-center justify-around px-6 pb-1.5 pt-2">
+        {TABS.map((t) => {
+          const on = t.href === "/" ? path === "/" : isActive(path, t.href) || (t.href === "/life" && !["/", "/diary"].includes(path) && !path.startsWith("/diary"));
+          return (
+            <Link key={t.href} href={t.href} className={`relative flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-medium transition ${on ? "text-ink" : "text-faint"}`}>
+              <Icon name={t.icon} size={23} stroke={on ? 2.1 : 1.6} />
+              {t.label}
+              {t.href === "/" && badge > 0 && <span className="absolute right-[30%] top-0 h-2 w-2 rounded-full bg-accent" />}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
@@ -324,53 +313,46 @@ export function TabBar({ badge }: { badge: number }) {
 export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unread: number; ventures?: { id: string; name: string }[] }) {
   const path = usePathname();
   if (path.startsWith("/sign-in") || path.includes("/deck")) return null;
-  const item = (t: { href: string; label: string; icon: string }, count?: number, small = false) => (
-    <Link key={t.href} href={t.href} className={`flex items-center gap-3 rounded-xl px-3 ${small ? "py-1.5 text-[13.5px]" : "py-2 text-[14px]"} transition ${isActive(path, t.href) ? "bg-raised font-medium text-ink" : "text-muted hover:text-ink"}`}>
-      <Icon name={t.icon} size={small ? 16 : 18} /> {t.label}
-      {count ? <span className="ml-auto rounded-full bg-accent px-1.5 text-[11px] font-semibold text-[#141413]">{count}</span> : null}
-    </Link>
-  );
-  const open = GROUPS.findIndex((g) => g.items.some((i) => isActive(path, i.href)));
-  return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-bg px-4 py-6 lg:flex">
-      <Link href="/" className="mb-6 px-3">
-        <div className="display text-[28px] leading-none">SEAN OS</div>
-        <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-faint">Personal organisation</div>
+  const item = (t: { href: string; label: string; icon: string }, count?: number) => {
+    const on = t.href === "/" ? path === "/" : isActive(path, t.href);
+    return (
+      <Link key={t.href} href={t.href} className={`flex items-center gap-3.5 rounded-2xl px-4 py-3 text-[15.5px] transition ${on ? "bg-raised font-medium text-ink" : "text-ink/75 hover:bg-raised/60 hover:text-ink"}`}>
+        <Icon name={t.icon} size={21} /> {t.label}
+        {count ? <span className="ml-auto rounded-full bg-accent px-1.5 text-[11px] font-semibold text-[#141413]">{count}</span> : null}
       </Link>
-      <div className="mb-4"><AskBar /></div>
-      <nav className="no-scrollbar flex-1 space-y-0.5 overflow-y-auto">
-        {TABS.filter((t) => t.href !== "/more").map((t) => item(t, t.href === "/approvals" ? badge : undefined))}
-        {path === "/" && (
-          <>
-            <div className="eyebrow px-3 pb-1 pt-5">Life HQ</div>
-            {ZONES.map((z) => <a key={z.id} href={`#${z.id}`} className="flex items-center gap-3 rounded-xl px-3 py-1.5 text-[13.5px] text-muted hover:text-ink"><Icon name={z.icon} size={16} /> {z.label}</a>)}
-          </>
-        )}
+    );
+  };
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line/70 bg-bg px-5 py-8 lg:flex">
+      <Link href="/" className="mb-10 px-3">
+        <div className="display text-[32px] leading-none">Life HQ</div>
+        <div className="mt-1.5 text-[13px] text-muted">Your personal assistant</div>
+      </Link>
+      <nav className="no-scrollbar flex-1 space-y-1 overflow-y-auto">
+        {TABS.map((t) => item(t, t.href === "/" ? badge : undefined))}
         {path.startsWith("/founder") && (
           <>
-            <div className="flex items-center justify-between px-3 pb-1 pt-5"><span className="eyebrow">Ventures</span><Link href="/founder/new" aria-label="New venture" className="text-muted hover:text-ink"><Icon name="plus" size={16} /></Link></div>
+            <div className="flex items-center justify-between px-4 pb-1 pt-6"><span className="eyebrow">Ventures</span><Link href="/founder/new" aria-label="New venture" className="text-muted hover:text-ink"><Icon name="plus" size={16} /></Link></div>
             {ventures.map((v) => (
-              <Link key={v.id} href={`/founder/v/${v.id}`} className={`flex items-center gap-3 rounded-xl px-3 py-1.5 text-[13.5px] transition ${path.startsWith(`/founder/v/${v.id}`) ? "bg-raised font-medium text-ink" : "text-muted hover:text-ink"}`}>
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-raised text-[10px] font-semibold text-ink">{v.name.slice(0, 1)}</span>
+              <Link key={v.id} href={`/founder/v/${v.id}`} className={`flex items-center gap-3 rounded-xl px-4 py-1.5 text-[13.5px] transition ${path.startsWith(`/founder/v/${v.id}`) ? "bg-raised font-medium text-ink" : "text-muted hover:text-ink"}`}>
                 <span className="truncate">{v.name}</span>
               </Link>
             ))}
           </>
         )}
-        <div className="pt-4">
-          {GROUPS.map((g, i) => (
-            <details key={g.title} open={i === open} className="group">
-              <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-faint hover:text-ink">
-                {g.title}<Icon name="chevron" size={14} className="transition group-open:rotate-90" />
-              </summary>
-              <div className="pb-1">{g.items.map((t) => item(t, undefined, true))}</div>
-            </details>
-          ))}
-        </div>
+        {path === "/overview" && (
+          <>
+            <div className="eyebrow px-4 pb-1 pt-6">On this page</div>
+            {ZONES.map((z) => <a key={z.id} href={`#${z.id}`} className="block rounded-xl px-4 py-1.5 text-[13px] text-muted hover:text-ink">{z.label}</a>)}
+          </>
+        )}
       </nav>
-      <Link href="/notifications" className="mt-3 flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] text-muted hover:text-ink">
-        <Icon name="bell" size={18} /> Notifications {unread > 0 && <span className="ml-auto rounded-full bg-raised px-1.5 text-[11px]">{unread}</span>}
-      </Link>
+      <div className="flex items-center gap-3 px-2">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-raised font-display text-[18px]">S</span>
+        <div className="min-w-0 flex-1"><div className="text-[14px] font-medium">Sean</div><div className="text-[12px] text-muted">Soho, London</div></div>
+        <Link href="/notifications" aria-label="Notifications" className="relative text-muted hover:text-ink"><Icon name="bell" size={19} />{unread > 0 && <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />}</Link>
+        <Link href="/settings" aria-label="Settings" className="text-muted hover:text-ink"><Icon name="settings" size={19} /></Link>
+      </div>
     </aside>
   );
 }

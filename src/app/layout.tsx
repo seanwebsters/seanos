@@ -6,10 +6,10 @@ import { getDb } from "@/lib/db";
 import { ensureBootstrapped } from "@/lib/bootstrap";
 
 export const metadata: Metadata = {
-  title: "SEAN OS",
-  description: "Your personal AI organisation.",
+  title: "Life HQ",
+  description: "Your personal assistant.",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "SEAN OS", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Life HQ", statusBarStyle: "black-translucent" },
   icons: { icon: "/icons/icon.svg", apple: "/icons/apple-touch-icon.png" },
 };
 

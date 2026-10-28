@@ -14,7 +14,7 @@ export default async function ExperiencePage({ params }: { params: Promise<{ id:
   return (
     <article>
       <Img src={e.image_url} seed={e.id} alt="" className="h-[44vh] min-h-[300px] w-full lg:mt-8 lg:rounded-[28px]"><div className="absolute inset-0 bg-gradient-to-t from-bg via-black/10 to-black/30" /></Img>
-      <div className="relative -mt-24"><PageHeader back="/life" title={e.title} eyebrow={`${e.kind} · ${e.area}`} /></div>
+      <div className="relative -mt-24"><PageHeader back="/lifestyle" title={e.title} eyebrow={`${e.kind} · ${e.area}`} /></div>
       <div className="mx-5 lg:mx-0">
         <div className="text-[14px] text-muted">{e.venue} · {e.dates}{e.price ? ` · ${e.price}` : ""}</div>
         <p className="mt-4 font-serif text-[17.5px] leading-relaxed">{e.description}</p>

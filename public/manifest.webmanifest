@@ -1,6 +1,6 @@
 {
-  "name": "SEAN OS",
-  "short_name": "SEAN OS",
+  "name": "Life HQ",
+  "short_name": "Life HQ",
   "description": "Your personal AI organisation.",
   "start_url": "/",
   "scope": "/",
@@ -15,8 +15,8 @@
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
   ],
   "shortcuts": [
-    { "name": "Ask SEAN OS", "url": "/?ask=1" },
-    { "name": "The Edition", "url": "/edition" },
-    { "name": "Approvals", "url": "/approvals" }
+    { "name": "Ask", "url": "/" },
+    { "name": "Diary", "url": "/diary" },
+    { "name": "Life", "url": "/life" }
   ]
 }

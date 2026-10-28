@@ -46,7 +46,7 @@ export default async function Today() {
       </header>
 
 
-      <Zone id="today" title="Today" href="/life?tab=calendar" link="calendar">
+      <Zone id="today" title="Today" href="/diary" link="calendar">
         <Setup d={d} />
         {!evening && <Briefing d={d} />}
         <Calendar d={d} />
@@ -107,7 +107,7 @@ export default async function Today() {
         )}
       </Zone>
 
-      <Zone id="life" title="Life" href="/life" link="life">
+      <Zone id="life" title="Life" href="/lifestyle" link="life">
         <Outfit d={d} />
         {d.experiences.length > 0 && <London d={d} />}
       </Zone>
@@ -383,7 +383,7 @@ function Outfit({ d }: { d: D }) {
 
 function Calendar({ d }: { d: D }) {
   return (
-    <Section title={d.part === "day" ? "Up next" : "Today"} href="/life?tab=calendar">
+    <Section title={d.part === "day" ? "Up next" : "Today"} href="/diary">
       {d.todayEvents.length ? (
         <List>
           {d.todayEvents.map((e) => (
@@ -402,10 +402,10 @@ function Calendar({ d }: { d: D }) {
 
 function London({ d }: { d: D }) {
   return (
-    <Section title={d.part === "evening" ? "London tonight" : "London"} href="/life?tab=london">
+    <Section title={d.part === "evening" ? "London tonight" : "London"} href="/lifestyle?tab=london">
       <Rail>
         {d.experiences.map((e) => (
-          <Link key={e.id} href={`/life/experience/${e.id}`} className="w-[62%] shrink-0 snap-start sm:w-[240px]">
+          <Link key={e.id} href={`/lifestyle/experience/${e.id}`} className="w-[62%] shrink-0 snap-start sm:w-[240px]">
             <Img src={e.image_url} seed={e.id} alt="" className="aspect-[4/5] rounded-card">
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-4 text-white">

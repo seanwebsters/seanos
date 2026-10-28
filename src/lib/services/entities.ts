@@ -11,7 +11,7 @@ const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === "st
 
 /** Which tables and fields the client may change. Everything else is server-only. */
 export const ENTITIES: Partial<Record<TableName, Spec>> = {
-  settings: { patch: ["autopilot", "daily_budget_cents", "monthly_budget_cents", "notify_threshold", "coverage", "calendar_ics_url", "default_model", "fast_model", "onboarded"], touch: "updated_at" },
+  settings: { patch: ["autopilot", "daily_budget_cents", "monthly_budget_cents", "notify_threshold", "coverage", "calendar_ics_url", "default_model", "fast_model", "onboarded", "pa_notifications"], touch: "updated_at" },
   profile: { patch: ["name", "birthday", "location", "role", "company", "bio", "interests", "personal_interests", "ambitions", "writing_voice", "style", "speaker", "home_lat", "home_lng"], touch: "updated_at" },
   memories: {
     patch: ["category", "content", "kind", "scope", "confidence", "pinned"], remove: true, touch: "updated_at",
@@ -40,7 +40,7 @@ export const ENTITIES: Partial<Record<TableName, Spec>> = {
   outfits: { patch: ["status"] },
   events: {
     patch: ["title", "start", "end", "location", "description"], remove: true,
-    create: (i) => ({ id: newId("evt"), title: str(i.title, "Untitled"), start: str(i.start) || nowIso(), end: str(i.end) || null, all_day: Boolean(i.all_day), location: str(i.location), description: str(i.description), source: "manual", external_id: null, prep_report_id: null }),
+    create: (i) => ({ id: newId("evt"), title: str(i.title, "Untitled"), start: str(i.start) || nowIso(), end: str(i.end) || null, all_day: Boolean(i.all_day), location: str(i.location), description: str(i.description), source: "manual", external_id: null, prep_report_id: null, created_by: "sean" }),
   },
   experiences: { patch: ["status"] },
   life: {
@@ -61,7 +61,7 @@ export const ENTITIES: Partial<Record<TableName, Spec>> = {
     create: (i) => ({ id: newId("vt"), venture_id: str(i.venture_id), title: str(i.title, "Task"), detail: str(i.detail), phase: ["30", "60", "90", "later"].includes(str(i.phase)) ? i.phase : "30", owner: str(i.owner, "sean"), due: str(i.due) || null, status: "todo", engine_task_id: null, created_at: nowIso(), updated_at: nowIso() }),
   },
   investor_pipeline: { patch: ["next_step", "follow_up_at", "notes"], touch: "updated_at" },
-  life_hq: { patch: ["vision", "quote", "salary", "salary_target", "savings", "savings_target", "revenue_target", "areas", "images"], touch: "updated_at" },
+  life_hq: { patch: ["vision", "quote", "salary", "salary_target", "savings", "savings_target", "revenue_target", "areas", "images", "routine"], touch: "updated_at" },
   hq_items: {
     patch: ["title", "value", "date", "done", "position"], remove: true, touch: "updated_at",
     create: (i) => ({ id: newId("hq"), section: ["health", "home", "friends", "travel", "reputation", "tasks", "vision"].includes(str(i.section)) ? i.section : "tasks", title: str(i.title, "Untitled").slice(0, 200), value: str(i.value).slice(0, 80), date: str(i.date) || null, done: false, position: Date.now(), created_at: nowIso(), updated_at: nowIso() }),

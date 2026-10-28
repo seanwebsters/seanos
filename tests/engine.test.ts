@@ -90,8 +90,17 @@ describe("engine", () => {
     for (const a of autos) await db.update("automations", a.id, { next_run_at: new Date(Date.now() - 1000).toISOString() });
     expect(await runAutomations()).toBe(0);
     await db.update("settings", "app", { autopilot: true });
-    expect(await runAutomations()).toBe(autos.length);
+    // Life HQ briefings start switched off.
+    expect(await runAutomations()).toBe(autos.filter((a) => a.enabled).length);
+    expect(autos.find((a) => a.workflow === "pa_briefing")!.enabled).toBe(false);
     expect(await runAutomations()).toBe(0);
+  });
+
+  it("runs a Life HQ briefing Sean switched on, even with Autopilot off", async () => {
+    const { db } = await setup(() => ({}));
+    const b = (await db.list("automations")).find((a) => a.workflow === "pa_briefing")!;
+    await db.update("automations", b.id, { enabled: true, next_run_at: new Date(Date.now() - 1000).toISOString() });
+    expect(await runAutomations()).toBe(1);
   });
 });
 

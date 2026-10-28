@@ -14,5 +14,6 @@ import "@/lib/future/workflows";
 import "@/lib/founder/workflows";
 import "@/lib/founder/copilot";
 import "@/lib/founder/growth";
+import "@/lib/pa/assistant";
 
 export { IDEA_ACTIONS } from "./general";

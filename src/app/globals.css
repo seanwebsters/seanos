@@ -99,7 +99,7 @@ body {
   .skeleton { background: linear-gradient(90deg, rgb(var(--raised)) 0%, rgb(var(--line)) 50%, rgb(var(--raised)) 100%); background-size: 200% 100%; @apply animate-shimmer rounded-xl; }
 }
 
-.pb-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 108px); }
+.pb-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 76px); }
 @media (min-width: 1024px) { .pb-tabbar { padding-bottom: 64px; } }
 .pt-safe { padding-top: env(safe-area-inset-top); }
 .grain::after {
