@@ -8,7 +8,7 @@ async function hmac(secret: string, data: string) {
 }
 
 export const SESSION_COOKIE = "sos_session";
-export const SESSION_DAYS = 60;
+export const SESSION_DAYS = 365;
 
 export async function signSession(secret: string, now = Date.now()) {
   const exp = String(now + SESSION_DAYS * 86400000);

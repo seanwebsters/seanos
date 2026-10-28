@@ -21,7 +21,7 @@ export default async function Settings() {
     { name: "Image generation (fal.ai)", ok: Boolean(env.falKey), what: "Product mockups, campaign visuals, brand boards.", need: "FAL_KEY" },
     { name: "Push notifications", ok: Boolean(env.vapidPublicKey && env.vapidPrivateKey), what: `${subs} device${subs === 1 ? "" : "s"} subscribed.`, need: "VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY (npx web-push generate-vapid-keys)" },
     { name: "Calendar", ok: Boolean(s.calendar_ics_url), what: "Read-only via your calendar's private iCal address.", need: "Paste the address below" },
-    { name: "Sign-in", ok: Boolean(env.ownerPasscode), what: env.ownerPasscode ? "Passcode protected." : "Open in development. Required in production.", need: "OWNER_PASSCODE + SESSION_SECRET" },
+    { name: "Sign-in", ok: Boolean(env.ownerPasscode), what: env.ownerPasscode ? "Passcode protected." : "Open: no sign-in. Anyone with the link can see and change everything. Set a passcode to lock it.", need: "OWNER_PASSCODE + SESSION_SECRET" },
     { name: "Scheduled jobs", ok: !process.env.VERCEL || Boolean(env.cronSecret), what: process.env.VERCEL ? "Vercel Cron calls /api/cron/tick." : "Built-in worker runs every 30 seconds.", need: "CRON_SECRET (Vercel)" },
     { name: "Gmail & Contacts", ok: false, what: "Not built yet: needs a Google OAuth app. Reconnection suggestions use your CRM and calendar for now.", need: "GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET (future)" },
   ];

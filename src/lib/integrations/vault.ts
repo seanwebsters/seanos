@@ -11,7 +11,9 @@ import { audit } from "@/lib/audit";
  * SESSION_SECRET). Secrets are never returned to the browser.
  */
 function key() {
-  return scryptSync(process.env.CREDENTIALS_KEY || env.sessionSecret, "sean-os-vault-v1", 32);
+  // A key that stays the same across deploys, even when sign-in is off.
+  const secret = process.env.CREDENTIALS_KEY || process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ANTHROPIC_API_KEY || env.sessionSecret;
+  return scryptSync(secret, "sean-os-vault-v1", 32);
 }
 
 export function encrypt(plain: string) {

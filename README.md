@@ -125,7 +125,7 @@ The built-in worker runs every 30 seconds, so scheduled jobs and delegated tasks
 
 1. New project → Deploy from GitHub → `seanwebsters/seanos`. It uses the `Dockerfile`.
 2. Add a **Volume** (any mount path). Railway exposes it as `RAILWAY_VOLUME_MOUNT_PATH` and the app stores data there.
-3. Set the variables `OWNER_PASSCODE`, `SESSION_SECRET` and `ANTHROPIC_API_KEY`, plus any optional ones from `.env.example`.
+3. Set `ANTHROPIC_API_KEY`, plus any optional ones from `.env.example`. Sign-in is off unless you set `OWNER_PASSCODE` (and `SESSION_SECRET`).
 
 ### Vercel
 
@@ -133,7 +133,7 @@ Vercel works, but it's serverless:
 
 1. Import the repo. The framework is detected as Next.js.
 2. **Use Supabase for data.** Vercel's disk is temporary. Create a Supabase project, run `supabase/migrations/0001_init.sql` and then `0002_finance.sql`, `0003_infinity.sql`, `0004_council_future.sql`, `0005_founder_os.sql` and `0006_growth.sql` in the SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
-3. Set `OWNER_PASSCODE`, `SESSION_SECRET`, `ANTHROPIC_API_KEY` and `CRON_SECRET`.
+3. Set `ANTHROPIC_API_KEY` and `CRON_SECRET`. Add `OWNER_PASSCODE` and `SESSION_SECRET` only if you want a sign-in.
 4. Delegated tasks run right after you create them (via `after()`, up to 5 minutes). Scheduled automations run from Vercel Cron, which `vercel.json` sets to once a day at 04:15 UTC (the Hobby plan limit). On Pro you can make it more frequent, e.g. `*/10 * * * *`.
 
 ## Integrations

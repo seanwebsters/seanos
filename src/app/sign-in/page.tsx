@@ -1,10 +1,13 @@
+import { redirect } from "next/navigation";
 import { SignInForm } from "./form";
 import { Art } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
 export default function SignIn() {
-  const configured = Boolean(process.env.OWNER_PASSCODE);
+  // No passcode means no sign-in: go straight in.
+  if (!process.env.OWNER_PASSCODE) redirect("/");
+  const configured = true;
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-bg lg:left-0">
       <Art seed="sign-in-sean-os" className="absolute inset-0 opacity-60" />
