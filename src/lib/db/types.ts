@@ -13,6 +13,8 @@ export interface Profile {
   id: "me";
   name: string;
   age: number | null;
+  /** YYYY-MM-DD; when set, age is worked out from it. */
+  birthday?: string | null;
   location: string;
   role: string;
   company: string;
@@ -991,6 +993,80 @@ export interface Experiment {
   updated_at: string;
 }
 
+/* ------------------------------ LIFE HQ ------------------------------ */
+
+export type LifeAreaKey = "career" | "business" | "money" | "health" | "home" | "friends" | "travel" | "reputation";
+
+/** Sean's own numbers and words. Progress is computed from real data where it exists, otherwise Sean sets it. */
+export interface LifeHQ {
+  id: "me";
+  vision: string;
+  quote: string;
+  salary: number;
+  salary_target: number;
+  /** Used only when no savings accounts are recorded in Money. */
+  savings: number;
+  savings_target: number;
+  revenue_target: number;
+  areas: Record<string, { statement: string; progress: number | null }>;
+  images: Record<string, string | null>;
+  /** Savings balance at the end of each month (YYYY-MM), recorded as it happens. */
+  savings_history: Record<string, number>;
+  updated_at: string;
+}
+
+export interface HQItem {
+  id: string;
+  section: "health" | "home" | "friends" | "travel" | "reputation" | "tasks" | "vision";
+  title: string;
+  value: string;
+  date: string | null;
+  done: boolean;
+  position: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WeekPriority {
+  id: string;
+  week: string;
+  rank: number;
+  title: string;
+  tag: "Work" | "Personal" | "Business";
+  done: boolean;
+  created_at: string;
+}
+
+/** Calm work projects. Kept apart from Founder OS ventures. */
+export interface WorkProject {
+  id: string;
+  name: string;
+  status: "Not set" | "Planning" | "Development" | "Testing" | "Active" | "Blocked" | "Complete";
+  progress: number | null;
+  next_action: string;
+  image: string | null;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Win {
+  id: string;
+  date: string;
+  title: string;
+  area: string;
+  created_at: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  date: string;
+  mood: number | null;
+  answers: Record<string, string>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CredentialRow {
   id: string;
   provider: string;
@@ -1095,6 +1171,12 @@ export interface Tables {
   copilot_messages: CopilotMessage;
   growth_metrics: GrowthMetric;
   experiments: Experiment;
+  life_hq: LifeHQ;
+  hq_items: HQItem;
+  week_priorities: WeekPriority;
+  work_projects: WorkProject;
+  wins: Win;
+  journal: JournalEntry;
   credentials: CredentialRow;
   notifications: Notification;
   push_subscriptions: PushSubscriptionRow;
@@ -1108,7 +1190,7 @@ export const TABLE_NAMES: TableName[] = [
   "speaking", "opportunities", "outreach", "approvals", "wardrobe", "outfits", "events", "experiences", "life",
   "transactions", "accounts", "budgets", "recurring", "finance_goals",
   "graph_nodes", "graph_edges", "graph_conflicts", "graph_ingest", "ambitions", "strategy_items", "strategy_reviews", "insights", "audit_log", "decisions", "scenarios",
-  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "growth_metrics", "experiments", "credentials",
+  "ventures", "venture_docs", "venture_tasks", "fin_models", "fin_model_versions", "cap_tables", "investors", "investor_pipeline", "copilot_messages", "growth_metrics", "experiments", "life_hq", "hq_items", "week_priorities", "work_projects", "wins", "journal", "credentials",
   "notifications", "push_subscriptions", "files",
 ];
 

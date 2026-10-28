@@ -234,17 +234,22 @@ export function AskBar() {
 
 /** The five sections of the one-page Home, in order. */
 export const ZONES = [
-  { id: "today", label: "Today", icon: "sun" },
-  { id: "founder", label: "Founder", icon: "rocket" },
-  { id: "news", label: "News", icon: "edition" },
-  { id: "opportunities", label: "Opportunities", icon: "target" },
-  { id: "money", label: "Money", icon: "wallet" },
-  { id: "life", label: "Life", icon: "life" },
-  { id: "team", label: "Team", icon: "agents" },
-];
+  { id: "now", label: "My life right now", icon: "sun" },
+  { id: "overview", label: "Life overview", icon: "chart" },
+  { id: "career", label: "Career (Calm)", icon: "briefcase" },
+  { id: "founder", label: "Founder HQ", icon: "rocket" },
+  { id: "money", label: "Money & wealth", icon: "wallet" },
+  { id: "health", label: "Health & fitness", icon: "dumbbell" },
+  { id: "home", label: "Home & lifestyle", icon: "home" },
+  { id: "friends", label: "Friends & family", icon: "people" },
+  { id: "travel", label: "Travel & experiences", icon: "plane" },
+  { id: "reputation", label: "Personal reputation", icon: "stage" },
+  { id: "journal", label: "Journal & reflection", icon: "book" },
+  { id: "vision", label: "The year ahead", icon: "target" },
+]
 
 const TABS = [
-  { href: "/", label: "Home", icon: "home" },
+  { href: "/", label: "Life HQ", icon: "home" },
   { href: "/founder", label: "Founder", icon: "rocket" },
   { href: "/approvals", label: "Inbox", icon: "inbox" },
   { href: "/agents", label: "Agents", icon: "agents" },
@@ -272,6 +277,7 @@ const GROUPS: { title: string; items: { href: string; label: string; icon: strin
     { href: "/wardrobe", label: "Wardrobe", icon: "shirt" },
   ] },
   { title: "Intelligence", items: [
+    { href: "/today", label: "Team briefing", icon: "edition" },
     { href: "/infinity", label: "SEAN ∞", icon: "sparkle" },
     { href: "/intelligence", label: "Insights", icon: "chart" },
     { href: "/memory", label: "Memory", icon: "brain" },
@@ -336,7 +342,7 @@ export function Sidebar({ badge, unread, ventures = [] }: { badge: number; unrea
         {TABS.filter((t) => t.href !== "/more").map((t) => item(t, t.href === "/approvals" ? badge : undefined))}
         {path === "/" && (
           <>
-            <div className="eyebrow px-3 pb-1 pt-5">On this page</div>
+            <div className="eyebrow px-3 pb-1 pt-5">Life HQ</div>
             {ZONES.map((z) => <a key={z.id} href={`#${z.id}`} className="flex items-center gap-3 rounded-xl px-3 py-1.5 text-[13.5px] text-muted hover:text-ink"><Icon name={z.icon} size={16} /> {z.label}</a>)}
           </>
         )}
